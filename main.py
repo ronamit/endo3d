@@ -13,7 +13,8 @@ Camera calibration parameters: fx = 232.5044678; % unit in pixel fy = 232.504467
 '''
 
 import glob
-import cv2
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
 
 data_dir = r'/Users/ronamit/PublicDatasets/ColonSim/generated_cases'
 cases_paths = glob.glob(data_dir + '/*/')
@@ -32,18 +33,17 @@ cy = rows / 2.0  # middle of the image in y-axis [pixels]
 
 
 def load_case(case_path):
-    images_paths = glob.glob(case_path + '/*.png')
+    rgb_img_paths = glob.glob(case_path + '/*.png')
+    for img_path in rgb_img_paths:
+        img = mpimg.imread(img_path)
+        plt.imshow(img)
+        plt.show()
+        pass
 
-    for img_path in images_paths:
-        img = cv2.imread(img_path)
 
 
 
-        
-        # cv2.imshow('image', img)
-        # cv2.waitKey(0)
-        # cv2.destroyAllWindows()
-        # exit(0)
+
     # depth_exr{i} = exrread(['path\SUK_L_depth',num2str(i,'%05d'),'.exr']); end
     #
     # scan_gt = cell(1,num);
