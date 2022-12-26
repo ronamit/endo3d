@@ -10,13 +10,17 @@ of the first frame camera is used as the origin point of the global space.
 
 Camera calibration parameters: fx = 232.5044678; % unit in pixel fy = 232.5044678; cx = 240.0;
  cy = 320.0; baseline = 4.5; %unit in millimeter
+
+
+ Requirements:
+ 1.   ffmpeg  (for ARM Mac see  https://stackoverflow.com/a/65222108 + https://www.hostinger.com/tutorials/how-to-install-ffmpeg#How_to_Install_FFmpeg_on_macOS)
 '''
 
 import glob
-import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
+from util import frames2video
 
-data_dir = r'/Users/ronamit/PublicDatasets/ColonSim/generated_cases'
+
+data_dir = r'/Users/ronamit/Library/CloudStorage/GoogleDrive-amitron5@gmail.com/My Drive/ColonSim'
 cases_paths = glob.glob(data_dir + '/*/')
 print(cases_paths)
 
@@ -32,16 +36,9 @@ cx = cols / 2.0  # middle of the image in x-axis [pixels]
 cy = rows / 2.0  # middle of the image in y-axis [pixels]
 
 
-def load_case(case_path):
-    rgb_img_paths = glob.glob(case_path + '/*.png')
-    for img_path in rgb_img_paths:
-        img = mpimg.imread(img_path)
-        plt.imshow(img)
-        plt.show()
-        pass
 
-
-
+for case_path in cases_paths:
+    frames2video(case_path)
 
 
     # depth_exr{i} = exrread(['path\SUK_L_depth',num2str(i,'%05d'),'.exr']); end
@@ -57,6 +54,3 @@ def load_case(case_path):
     # for v = 1:rows % rows
 
 
-
-for case_path in cases_paths:
-    load_case(case_path)
