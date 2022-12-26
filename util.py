@@ -1,14 +1,12 @@
 import subprocess
 import os
-import ffmpeg
-import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
-
 
 def frames2video(images_path, ffmpeg_path, output_dir_path='', output_file_name='video', frame_rate=30,
                  output_format='mp4'):
     '''
     Convert a sequence of images to a video using ffmpeg
+    :param output_file_name:
+    :param output_dir_path:
     :param output_format:
     :param images_path: path to the input images
     :param ffmpeg_path:
@@ -27,5 +25,4 @@ def frames2video(images_path, ffmpeg_path, output_dir_path='', output_file_name=
                '-i', input_pattern,
                '-vcodec', codec,
                output_file]
-    print(command)
     subprocess.run(command)
