@@ -13,15 +13,22 @@ Camera calibration parameters: fx = 232.5044678; % unit in pixel fy = 232.504467
 
 
  Requirements:
- 1.   ffmpeg  (for ARM Mac see  https://stackoverflow.com/a/65222108 + https://www.hostinger.com/tutorials/how-to-install-ffmpeg#How_to_Install_FFmpeg_on_macOS)
+ 1.   ffmpeg
+   [for Mac-ARM download ffmpeg from  https://stackoverflow.com/a/65222108 and put in a some local location
+   and make executable with $ chmod 755 ffmpeg]
 '''
 
+import os
 import glob
 from util import frames2video
 
+# Set the path to the ffmpeg executable
+ffmpeg_path = '/Users/ronamit/audio-orchestrator-ffmpeg/bin/ffmpeg'
 
-data_dir = r'/Users/ronamit/Library/CloudStorage/GoogleDrive-amitron5@gmail.com/My Drive/ColonSim'
-cases_paths = glob.glob(data_dir + '/*/')
+# Set the path to the ffmpeg executable
+dataset_path = r'/Users/ronamit/PublicDatasets/ColonSim/generated_cases'
+cases_paths = glob.glob(dataset_path + '/*/')
+
 print(cases_paths)
 
 # camera intrinsic parameters
@@ -36,9 +43,13 @@ cx = cols / 2.0  # middle of the image in x-axis [pixels]
 cy = rows / 2.0  # middle of the image in y-axis [pixels]
 
 
-
 for case_path in cases_paths:
-    frames2video(case_path)
+    case_name = os.path.split(case_path)[-2]
+    frames2video(images_path=case_path,
+                 ffmpeg_path=ffmpeg_path,
+                 output_dir_path=os.path.join(case_path, 'out'),
+                 output_file_name=case_name,
+                 frame_rate=30)
 
 
     # depth_exr{i} = exrread(['path\SUK_L_depth',num2str(i,'%05d'),'.exr']); end
