@@ -14,8 +14,12 @@ Camera calibration parameters: fx = 232.5044678; % unit in pixel fy = 232.504467
 
  Requirements:
  1.   ffmpeg
-   [for Mac-ARM download ffmpeg from  https://stackoverflow.com/a/65222108 and put in a some local location
+   * Installation on Mac with ARM architecture:
+    download ffmpeg from  https://stackoverflow.com/a/65222108 and put in a some local location
    and make executable with $ chmod 755 ffmpeg]
+   * Installation on Windows:
+    download ffmpeg from https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-full.7z
+    and put in a some local location and make executable with $ chmod 755 ffmpeg]
 '''
 
 import os
