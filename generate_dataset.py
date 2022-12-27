@@ -15,9 +15,19 @@ parser.add_argument('--sim_out_path', type=str, required=True,
 parser.add_argument('--dataset_out_path', type=str, default='./dataset_out', help='path to the output dataset')
 args = parser.parse_args()
 
-seq_paths = glob.glob(args.sim_out_path + '/*/')
 
+
+
+dataset_out_path = os.path.abspath(args.dataset_out_path)
+sim_out_path = os.path.abspath(args.sim_out_path)
+
+if not os.path.isdir(dataset_out_path):
+    os.makedirs(dataset_out_path)
+shutil.copy2(sim_out_path + '/MySettings.set', dataset_out_path + '/MySettings.set')
+
+seq_paths = glob.glob(sim_out_path + '/*/')
 print(seq_paths)
+
 
 # camera intrinsic parameters
 focal_length = 4.969783  # [millimeter]
@@ -30,11 +40,7 @@ fy = focal_length * rows / sensor_height  # focal length in y-axis [pixels]
 cx = cols / 2.0  # middle of the image in x-axis [pixels]
 cy = rows / 2.0  # middle of the image in y-axis [pixels]
 
-dataset_out_path = os.path.abspath(args.dataset_out_path)
-if not os.path.isdir(dataset_out_path):
-    os.makedirs(dataset_out_path)
-shutil.copy2(dataset_out_path + 'MySettings.set', dataset_out_path + 'MySettings.set')
-
+# Create video from frame sequence
 for seq_path in seq_paths:
     seq_name = os.path.split(seq_path)[-2]
     frame_rate = 20
