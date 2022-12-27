@@ -41,12 +41,16 @@ cx = cols / 2.0  # middle of the image in x-axis [pixels]
 cy = rows / 2.0  # middle of the image in y-axis [pixels]
 
 # Create video from frame sequence
-for seq_path in seq_paths:
-    seq_name = os.path.split(seq_path)[-2]
+for seq_in_path in seq_paths:
+    seq_name = os.path.split(seq_in_path)[-2]
     frame_rate = 20
-    frames2video(images_path=seq_path,
+    seq_out_path = os.path.join(dataset_out_path, seq_name)
+    os.makedirs(seq_out_path)
+
+    # shotPerSec":"float(20)
+    frames2video(images_path=seq_in_path,
                  ffmpeg_path=args.ffmpeg_path,
-                 dataset_out_path=dataset_out_path,
+                 seq_out_path=seq_out_path,
                  vid_file_name=seq_name,
                  frame_rate=frame_rate)
 
