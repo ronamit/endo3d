@@ -1,7 +1,7 @@
 import subprocess
 import os
 
-def frames2video(images_path, ffmpeg_path, output_dir_path='', output_file_name='video', frame_rate=30,
+def frames2video(images_path, ffmpeg_path, dataset_out_path, vid_file_name, frame_rate,
                  output_format='mp4'):
     '''
     Convert a sequence of images to a video using ffmpeg
@@ -14,10 +14,10 @@ def frames2video(images_path, ffmpeg_path, output_dir_path='', output_file_name=
     :param frame_rate: frame rate
     :return:
     '''
-    if not os.path.isdir(output_dir_path):
-        os.makedirs(output_dir_path)
+    if not os.path.isdir(dataset_out_path):
+        os.makedirs(dataset_out_path)
     input_pattern = os.path.join(images_path, '*.png')
-    output_file = os.path.join(output_dir_path, output_file_name) + '.' + output_format
+    output_file = os.path.join(dataset_out_path, vid_file_name) + '.' + output_format
     codec = 'libx264'
     command = [ffmpeg_path, '-y',
                '-framerate', str(frame_rate),
