@@ -14,8 +14,6 @@ def frames2video(images_path, ffmpeg_path, dataset_out_path, vid_file_name, fram
     :param frame_rate: frame rate
     :return:
     '''
-    if not os.path.isdir(dataset_out_path):
-        os.makedirs(dataset_out_path)
     input_pattern = os.path.join(images_path, '*.png')
     output_file = os.path.join(dataset_out_path, vid_file_name) + '.' + output_format
     codec = 'libx264'
