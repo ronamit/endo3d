@@ -15,15 +15,11 @@ parser.add_argument('--sim_out_path', type=str, required=True,
 parser.add_argument('--dataset_out_path', type=str, default='./dataset_out', help='path to the output dataset')
 args = parser.parse_args()
 
-
-
-
 dataset_out_path = os.path.abspath(args.dataset_out_path)
 sim_out_path = os.path.abspath(args.sim_out_path)
 
 if not os.path.isdir(dataset_out_path):
     os.makedirs(dataset_out_path)
-shutil.copy2(sim_out_path + '/MySettings.set', dataset_out_path + '/MySettings.set')
 
 seq_paths = glob.glob(sim_out_path + '/*/')
 print(seq_paths)
@@ -42,12 +38,14 @@ cy = rows / 2.0  # middle of the image in y-axis [pixels]
 
 # Create video from frame sequence
 for seq_in_path in seq_paths:
-    seq_name = os.path.split(seq_in_path)[-2]
-    frame_rate = 20
+    seq_name = os.path.basename(os.path.normpath(seq_in_path))
     seq_out_path = os.path.join(dataset_out_path, seq_name)
-    os.makedirs(seq_out_path)
+    if not os.path.isdir(seq_out_path):
+        os.makedirs(seq_out_path)
+    shutil.copy2(os.path.join(seq_in_path, 'MySettings.set'), os.path.join(seq_out_path + 'M-ySettings.set'))
 
-    # shotPerSec":"float(20)
+    frame_rate = 20  # shotPerSec":"float(20)
+
     frames2video(images_path=seq_in_path,
                  ffmpeg_path=args.ffmpeg_path,
                  seq_out_path=seq_out_path,
