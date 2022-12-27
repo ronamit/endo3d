@@ -2,6 +2,7 @@ import subprocess
 import os
 import glob
 
+
 def frames2video(images_path, ffmpeg_path, seq_out_path, vid_file_name, frame_rate,
                  output_format='mp4'):
     '''
@@ -13,12 +14,11 @@ def frames2video(images_path, ffmpeg_path, seq_out_path, vid_file_name, frame_ra
 
     output_file = os.path.join(seq_out_path, vid_file_name) + '.' + output_format
 
-    codec = 'libx264'
     command = [ffmpeg_path, '-y',
                '-framerate', str(frame_rate),
                '-i', image_prefix + '%05d.png',
-               '-vcodec', codec,
+               '-vcodec', 'libx265',  # codec
+               '-crf', '15',   # compression vs. quality factor - see https://trac.ffmpeg.org/wiki/Encode/H.265
                output_file]
     subprocess.run(command)
-    # Note: '-i' is a workaround (https://stackoverflow.com/questions/31201164/ffmpeg-error-pattern-type-glob-was-selected-but-globbing-is-not-support-ed-by)
     print(f'Video saved to: {output_file}')
