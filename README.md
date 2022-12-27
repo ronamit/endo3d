@@ -20,7 +20,13 @@ Camera calibration parameters: fx = 232.5044678; % unit in pixel fy = 232.504467
    [download ffmpeg](https://ffmpeg.org/download.html)
    and put in a some local location.
 
-
+* Packages:
+  * [OpenCV](https://opencv.org/)
+  * numpy 
+  * matplotlib
+  * openexr
+  * imath
+ 
 ## How to run dataset generation
 Run `generate_dataset.py` with the following required arguments:
 * --ffmpeg_path: path to ffmpeg executable

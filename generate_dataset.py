@@ -6,7 +6,7 @@ import os
 import glob
 import argparse
 import shutil
-from util import frames2video
+from util import create_rgb_video, create_depth_video
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--ffmpeg_path', type=str, required=True, help='path to ffmpeg executable')
@@ -44,12 +44,18 @@ for seq_in_path in seq_paths:
 
     frame_rate = 20  # shotPerSec":"float(20)
 
+    create_depth_video(seq_in_path=seq_in_path,
+                       seq_out_path=seq_out_path,
+                       vid_file_name=seq_name + '_depth',
+                       frame_rate=frame_rate)
+
     # Create video from frame sequence
-    frames2video(images_path=seq_in_path,
-                 ffmpeg_path=args.ffmpeg_path,
-                 seq_out_path=seq_out_path,
-                 vid_file_name=seq_name,
-                 frame_rate=frame_rate)
+    create_rgb_video(seq_in_path=seq_in_path,
+                     seq_out_path=seq_out_path,
+                     vid_file_name=seq_name + '_rgb',
+                     frame_rate=frame_rate,
+                     ffmpeg_path=args.ffmpeg_path)
+
 
 
     # depth_exr{i} = exrread(['path\SUK_L_depth',num2str(i,'%05d'),'.exr']); end
@@ -63,5 +69,3 @@ for seq_in_path in seq_paths:
     # xyzPoints = zeros(rows, cols, 3);
     #
     # for v = 1:rows % rows
-
-
