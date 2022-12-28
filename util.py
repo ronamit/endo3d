@@ -77,8 +77,6 @@ def save_depth_frames(seq_in_path, seq_out_path, vid_file_name, frame_rate):
     # list of paths to EXR files
     exr_paths = glob.glob(os.path.join(seq_in_path, '*.exr'))
 
-    exr_paths = exr_paths[:20]  # debug
-
     exr_paths.sort()
     n_frames = len(exr_paths)
 
