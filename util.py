@@ -34,20 +34,16 @@ def create_rgb_video(seq_in_path, seq_out_path, vid_file_name, frame_rate, ffmpe
 def save_heatmap_video(depth_frames, output_path, frame_rate):
     n_frames = depth_frames.shape[0]
     frame_size = depth_frames.shape[1:]
-    # Set the video codec
-    fcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
-
-    # Create a VideoWriter object
+    fcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')  # codec
     out = cv2.VideoWriter(output_path + '_video.mp4',
                           fcc,
                           fps=frame_rate,
                           frameSize=(frame_size[1], frame_size[0]),
                           isColor=False)
-
+    fig, ax = plt.subplots()
     # Loop through each frame of the matrix and write it to the video
     for i in range(n_frames):
         frame = depth_frames[i]
-        fig, ax = plt.subplots()
         dpi = 100
         fig.set_size_inches(frame_size[0] / dpi, frame_size[1] / dpi)
         ax.imshow(frame, cmap='hot', interpolation='nearest')
@@ -58,13 +54,13 @@ def save_heatmap_video(depth_frames, output_path, frame_rate):
         # redraw the canvas
         fig = plt.gcf()
         fig.canvas.draw()
-
         # convert canvas to image using numpy
         img = np.fromstring(fig.canvas.tostring_rgb(), dtype=np.uint8, sep='')
         img = img.reshape(fig.canvas.get_width_height()[::-1] + (3,))
         imf = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         out.write(imf)
-
+        plt.cla()
+    plt.close(fig)
     # Release the VideoWriter object
     out.release()
     print(f'Depth video saved to: {output_path}')
