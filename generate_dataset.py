@@ -6,7 +6,7 @@ import os
 import glob
 import argparse
 import shutil
-from util import create_rgb_video, create_depth_video
+from util import create_rgb_video, save_depth_frames
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--ffmpeg_path', type=str, required=True, help='path to ffmpeg executable')
@@ -44,10 +44,10 @@ for seq_in_path in seq_paths:
 
     frame_rate = 20  # shotPerSec":"float(20)
 
-    create_depth_video(seq_in_path=seq_in_path,
-                       seq_out_path=seq_out_path,
-                       vid_file_name=seq_name + '_depth',
-                       frame_rate=frame_rate)
+    save_depth_frames(seq_in_path=seq_in_path,
+                      seq_out_path=seq_out_path,
+                      vid_file_name=seq_name + '_depth',
+                      frame_rate=frame_rate)
 
     # Create video from frame sequence
     create_rgb_video(seq_in_path=seq_in_path,

@@ -26,6 +26,7 @@ Camera calibration parameters: fx = 232.5044678; % unit in pixel fy = 232.504467
   * matplotlib
   * openexr
   * imath
+  * h5py
  
 ## How to run dataset generation
 Run `generate_dataset.py` with the following required arguments:

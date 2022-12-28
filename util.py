@@ -8,6 +8,7 @@ import OpenEXR
 import Imath
 import cv2
 import matplotlib.pyplot as plt
+import h5py
 
 
 def create_rgb_video(seq_in_path, seq_out_path, vid_file_name, frame_rate, ffmpeg_path):
@@ -28,7 +29,6 @@ def create_rgb_video(seq_in_path, seq_out_path, vid_file_name, frame_rate, ffmpe
                output_path]
     subprocess.run(command)
     print(f'Video saved to: {output_path}')
-
 
 
 # def create_depth_video(seq_in_path, seq_out_path, vid_file_name, frame_rate):
@@ -56,44 +56,55 @@ def create_rgb_video(seq_in_path, seq_out_path, vid_file_name, frame_rate, ffmpe
 #     # Close the output file
 #     out_file.close()
 
-def create_depth_video(seq_in_path, seq_out_path, vid_file_name, frame_rate):
+def save_depth_frames(seq_in_path, seq_out_path, vid_file_name, frame_rate):
     '''
     Load a sequence of depth images from a folder
     '''
     # list of paths to EXR files
     exr_paths = glob.glob(os.path.join(seq_in_path, '*.exr'))
     exr_paths.sort()
+    n_frames = len(exr_paths)
 
-    # Set the output video parameters
-    fourcc = cv2.VideoWriter_fourcc(*'FFV1')  # codec
+    # Open the output file for writing
+    output_path = os.path.join(seq_out_path, vid_file_name) + '.h5'
 
     # Compute the size
     example_file = OpenEXR.InputFile(exr_paths[0])
     dw = example_file.header()['dataWindow']
     frame_size = (dw.max.x - dw.min.x + 1, dw.max.y - dw.min.y + 1)
 
-    output_path = os.path.join(seq_out_path, vid_file_name) + '.exr'
-
-    # Create the output video
-    out = cv2.VideoWriter(output_path, fourcc, frame_rate, frame_size)
+    depth_frames = np.zeros((n_frames, frame_size[0], frame_size[1]), dtype=np.float32)
 
     # Iterate over the EXR files and add them to the video
-    for exr_path in exr_paths:
+    for i_frame, exr_path in enumerate(exr_paths):
         # Open the EXR file
         file = OpenEXR.InputFile(exr_path)
-
-        # # Read channels as 32-bit floats
+        # Read channels as floats, the RGB channels are identical, and represent the depth
         FLOAT = Imath.PixelType(Imath.PixelType.FLOAT)
-        (R, G, B, A) = [array.array('f', file.channel(Chan, FLOAT)).tolist() for Chan in ("R", "G", "B", "A")]
-
-        # the RGB channels are identical, and represent the depth
-        depth_img = np.reshape(R, frame_size)
-
-        # plt.imshow(depth_img, cmap='hot', interpolation='nearest')
+        R_chan = array.array('f', file.channel('R', FLOAT)).tolist()
+        depth_img = np.reshape(R_chan, frame_size)
+        depth_frames[i_frame] = depth_img
+        # plt.imshow(depth_frames[i_frame], cmap='hot', interpolation='nearest')
         # plt.show()
+        # break
 
-        # Add the depth frame to the video
-        out.write(depth_img)
+    print(f'Min depth: {np.min(depth_frames.flatten())}, Max depth: {np.max(depth_frames.flatten())}')
+    plt.hist(depth_frames.flatten(), bins='auto')
+    plt.show()
 
-    # Release the video writer
-    out.release()
+    # Save
+    with h5py.File(output_path, 'w') as hf:
+        hf.create_dataset(vid_file_name, data=depth_frames)
+    print(f'Depth frames saved to: {output_path}')
+
+    #     # initialize video writer
+    #     out = cv2.VideoWriter(output_path, cv2.VideoWriter_fourcc(*'mp4v'),
+    #                           fps=frame_rate,
+    #                           frameSize=(frame_size[1], frame_size[0]),
+    #                           isColor=False)
+    #
+    #     # add this array to the video
+    #     out.write(depth_img)
+    #
+    # # close out the video writer
+    # out.release()
