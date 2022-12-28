@@ -105,6 +105,7 @@ def save_depth_frames(seq_in_path, seq_out_path, vid_file_name, frame_rate):
     print(f'Min depth: {np.min(depth_frames.flatten())}, Max depth: {np.max(depth_frames.flatten())}')
     plt.hist(depth_frames.flatten(), bins='auto')
     plt.show()
+    plt.savefig(output_path + '_histogram.png')
 
     # Save as matrix
     with h5py.File(output_path + '.h5', 'w') as hf:
