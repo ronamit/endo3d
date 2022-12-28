@@ -2,10 +2,11 @@
 
 '''
 
-import os
-import glob
 import argparse
+import glob
+import os
 import shutil
+
 from util import create_rgb_video, save_depth_frames
 
 parser = argparse.ArgumentParser()

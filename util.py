@@ -1,14 +1,14 @@
-import subprocess
-import os
-import glob
 import array
+import glob
+import os
+import subprocess
 
-import numpy as np
-import OpenEXR
 import Imath
+import OpenEXR
 import cv2
-import matplotlib.pyplot as plt
 import h5py
+import matplotlib.pyplot as plt
+import numpy as np
 
 
 def create_rgb_video(seq_in_path, seq_out_path, vid_file_name, frame_rate, ffmpeg_path):
@@ -31,30 +31,44 @@ def create_rgb_video(seq_in_path, seq_out_path, vid_file_name, frame_rate, ffmpe
     print(f'Video saved to: {output_path}')
 
 
-# def create_depth_video(seq_in_path, seq_out_path, vid_file_name, frame_rate):
-#     '''
-#     Load a sequence of depth images from a folder
-#     '''
-#     # list of paths to EXR files
-#     exr_paths = glob.glob(os.path.join(seq_in_path, '*.exr'))
-#     exr_paths.sort()
-#
-#
-#     # Open the output file for writing
-#     output_path = os.path.join(seq_out_path, vid_file_name) + '.exr'
-#     out_file = OpenEXR.OutputFile(output_path)
-#
-#     # Loop through each EXR file and write the depth data to the output file
-#     for i, exr_path in enumerate(exr_paths):
-#         # Open the EXR file and read the depth data
-#         exr_file = OpenEXR.InputFile(exr_path)
-#         depth_data = np.array(exr_file.channel(0, Imath.PixelType(Imath.PixelType.FLOAT)))
-#
-#         # Write the depth data to the output file
-#         out_file.writePixels({'depth': depth_data})
-#
-#     # Close the output file
-#     out_file.close()
+def save_heatmap_video(depth_frames, output_path, frame_rate):
+    n_frames = depth_frames.shape[0]
+    frame_size = depth_frames.shape[1:]
+    # Set the video codec
+    fcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
+
+    # Create a VideoWriter object
+    out = cv2.VideoWriter(output_path + '_video.mp4',
+                          fcc,
+                          fps=frame_rate,
+                          frameSize=(frame_size[1], frame_size[0]),
+                          isColor=False)
+
+    # Loop through each frame of the matrix and write it to the video
+    for i in range(n_frames):
+        frame = depth_frames[i]
+        fig, ax = plt.subplots()
+        dpi = 100
+        fig.set_size_inches(frame_size[0] / dpi, frame_size[1] / dpi)
+        ax.imshow(frame, cmap='hot', interpolation='nearest')
+        plt.axis('off')
+        plt.axis('image')
+        # remove white padding
+        plt.subplots_adjust(left=0, right=1, top=1, bottom=0)
+        # redraw the canvas
+        fig = plt.gcf()
+        fig.canvas.draw()
+
+        # convert canvas to image using numpy
+        img = np.fromstring(fig.canvas.tostring_rgb(), dtype=np.uint8, sep='')
+        img = img.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+        imf = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        out.write(imf)
+
+    # Release the VideoWriter object
+    out.release()
+    print(f'Depth video saved to: {output_path}')
+
 
 def save_depth_frames(seq_in_path, seq_out_path, vid_file_name, frame_rate):
     '''
@@ -63,13 +77,13 @@ def save_depth_frames(seq_in_path, seq_out_path, vid_file_name, frame_rate):
     # list of paths to EXR files
     exr_paths = glob.glob(os.path.join(seq_in_path, '*.exr'))
 
-    # exr_paths = exr_paths[:20] # debug
+    exr_paths = exr_paths[:20]  # debug
 
     exr_paths.sort()
     n_frames = len(exr_paths)
 
     # Open the output file for writing
-    output_path = os.path.join(seq_out_path, vid_file_name) + '.h5'
+    output_path = os.path.join(seq_out_path, vid_file_name)
 
     # Compute the size
     example_file = OpenEXR.InputFile(exr_paths[0])
@@ -87,27 +101,14 @@ def save_depth_frames(seq_in_path, seq_out_path, vid_file_name, frame_rate):
         R_chan = array.array('f', file.channel('R', FLOAT)).tolist()
         depth_img = np.reshape(R_chan, frame_size)
         depth_frames[i_frame] = depth_img
-        # plt.imshow(depth_frames[i_frame], cmap='hot', interpolation='nearest')
-        # plt.show()
-        # break
 
     print(f'Min depth: {np.min(depth_frames.flatten())}, Max depth: {np.max(depth_frames.flatten())}')
     plt.hist(depth_frames.flatten(), bins='auto')
     plt.show()
 
-    # Save
-    with h5py.File(output_path, 'w') as hf:
+    # Save as matrix
+    with h5py.File(output_path + '.h5', 'w') as hf:
         hf.create_dataset(vid_file_name, data=depth_frames)
-    print(f'Depth frames saved to: {output_path}')
+    print(f'Depth frames saved to: {output_path}.h5')
 
-    #     # initialize video writer
-    #     out = cv2.VideoWriter(output_path, cv2.VideoWriter_fourcc(*'mp4v'),
-    #                           fps=frame_rate,
-    #                           frameSize=(frame_size[1], frame_size[0]),
-    #                           isColor=False)
-    #
-    #     # add this array to the video
-    #     out.write(depth_img)
-    #
-    # # close out the video writer
-    # out.release()
+    save_heatmap_video(depth_frames, output_path, frame_rate)
