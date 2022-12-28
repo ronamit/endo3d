@@ -57,8 +57,9 @@ def save_heatmap_video(depth_frames, output_path, frame_rate):
         # convert canvas to image using numpy
         img = np.fromstring(fig.canvas.tostring_rgb(), dtype=np.uint8, sep='')
         img = img.reshape(fig.canvas.get_width_height()[::-1] + (3,))
-        imf = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        out.write(imf)
+        img_cv = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        np.moveaxis(img_cv, 0, 1)
+        out.write(img_cv)
         plt.cla()
     plt.close(fig)
     # Release the VideoWriter object
@@ -103,7 +104,7 @@ def save_depth_frames(seq_in_path, seq_out_path, vid_file_name, frame_rate):
 
     # Save as matrix
     with h5py.File(output_path + '.h5', 'w') as hf:
-        hf.create_dataset(vid_file_name, data=depth_frames)
+        hf.create_dataset(vid_file_name, data=depth_frames, compression='gzip')
     print(f'Depth frames saved to: {output_path}.h5')
 
     save_heatmap_video(depth_frames, output_path, frame_rate)
