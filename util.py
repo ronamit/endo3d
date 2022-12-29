@@ -59,7 +59,7 @@ def save_depth_video(depth_frames, output_path, frame_rate, mode='heatmap'):
         if mode == 'heatmap':
             ax.imshow(frame, cmap='hot', interpolation='nearest')
         elif mode == 'validity':
-            ax.imshow(frame > 0, interpolation='nearest')
+            ax.imshow(frame > 0, interpolation='nearest')  # a binary image
         else:
             raise ValueError
         plt.axis('off')
@@ -127,4 +127,3 @@ def save_depth_frames(seq_in_path, seq_out_path, vid_file_name, frame_rate, limi
     print(f'Depth frames saved to: {output_path}.h5')
 
     save_depth_video(depth_frames, output_path, frame_rate, mode='heatmap')
-    save_depth_video(depth_frames, output_path, frame_rate, mode='validity')
