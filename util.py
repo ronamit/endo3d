@@ -58,7 +58,7 @@ def save_heatmap_video(depth_frames, output_path, frame_rate):
         img = np.fromstring(fig.canvas.tostring_rgb(), dtype=np.uint8, sep='')
         img = img.reshape(fig.canvas.get_width_height()[::-1] + (3,))
         img_cv = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        np.moveaxis(img_cv, 0, 1)
+        np.flip(img_cv, 1)
         out.write(img_cv)
         plt.cla()
     plt.close(fig)
@@ -67,7 +67,7 @@ def save_heatmap_video(depth_frames, output_path, frame_rate):
     print(f'Depth video saved to: {output_path}')
 
 
-def save_depth_frames(seq_in_path, seq_out_path, vid_file_name, frame_rate):
+def save_depth_frames(seq_in_path, seq_out_path, vid_file_name, frame_rate, limit_frame_num=0):
     '''
     Load a sequence of depth images from a folder
     '''
@@ -75,8 +75,12 @@ def save_depth_frames(seq_in_path, seq_out_path, vid_file_name, frame_rate):
     exr_paths = glob.glob(os.path.join(seq_in_path, '*.exr'))
 
     exr_paths.sort()
-    n_frames = len(exr_paths)
 
+    if limit_frame_num:
+        # for debugging
+        exr_paths = exr_paths[:limit_frame_num]
+
+    n_frames = len(exr_paths)
     # Open the output file for writing
     output_path = os.path.join(seq_out_path, vid_file_name)
 
