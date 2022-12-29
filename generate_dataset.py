@@ -9,7 +9,8 @@ import shutil
 
 from util import create_rgb_video, save_depth_frames
 
-if __name__ == '__main__':
+
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--ffmpeg_path', type=str, required=True, help='path to ffmpeg executable')
     parser.add_argument('--sim_out_path', type=str, required=True,
@@ -67,3 +68,7 @@ if __name__ == '__main__':
         # xyzPoints = zeros(rows, cols, 3);
         #
         # for v = 1:rows % rows
+
+
+if __name__ == '__main__':
+    main()
