@@ -11,22 +11,27 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def create_rgb_video(seq_in_path, seq_out_path, vid_file_name, frame_rate, ffmpeg_path):
-    '''
-    Convert a sequence of images to a video using ffmpeg
-    '''
+def get_seq_id(seq_in_path):
+    """
+     get the 3 letter prefix of the files
+    """
+    seq_id = glob.glob(os.path.join(seq_in_path, '*.png'))[0][-13:-10]
+    return seq_id
 
-    # get the prefix of the image files
-    image_prefix = glob.glob(os.path.join(seq_in_path, '*.png'))[0][0:-9]
+
+def create_rgb_video(seq_in_path, seq_out_path, vid_file_name, frame_rate, ffmpeg_path):
+    """
+    Convert a sequence of images to a video using ffmpeg
+    """
 
     output_path = os.path.join(seq_out_path, vid_file_name) + '.mp4'
-
-    frames_paths = glob.glob(os.path.join(seq_in_path, f'{image_prefix}*.png'))
-
+    seq_id = get_seq_id(seq_in_path)
+    frames_paths = glob.glob(os.path.join(seq_in_path, f'{seq_id}_*.png'))
+    image_prefix = os.path.join(seq_in_path, seq_id + '_')
     print(f'Number of RGB frames to be loaded: {len(frames_paths)}')
 
     command = [ffmpeg_path,
-               '-hide_banner', '-loglevel',  'error',  '-nostats',  # less verbose
+               '-hide_banner', '-loglevel', 'error', '-nostats',  # less verbose
                '-y',
                '-framerate', str(frame_rate),
                '-i', image_prefix + '%05d.png',
@@ -54,7 +59,7 @@ def save_depth_video(depth_frames, output_path, frame_rate, mode='heatmap'):
         if mode == 'heatmap':
             ax.imshow(frame, cmap='hot', interpolation='nearest')
         elif mode == 'validity':
-            ax.imshow(frame > 0,  interpolation='nearest')
+            ax.imshow(frame > 0, interpolation='nearest')
         else:
             raise ValueError
         plt.axis('off')
@@ -78,33 +83,31 @@ def save_depth_video(depth_frames, output_path, frame_rate, mode='heatmap'):
 
 
 def save_depth_frames(seq_in_path, seq_out_path, vid_file_name, frame_rate, limit_frame_num=0):
-    '''
+    """
     Load a sequence of depth images from a folder
-    '''
-    # list of paths to EXR files
-    exr_paths = glob.glob(os.path.join(seq_in_path, '*.exr'))
+    """
 
-    exr_paths.sort()
-
+    seq_id = get_seq_id(seq_in_path)
+    depth_files_paths = glob.glob(os.path.join(seq_in_path, f'{seq_id}_depth*.exr'))
+    depth_files_paths.sort()
     if limit_frame_num:
         # for debugging
-        exr_paths = exr_paths[:limit_frame_num]
-
-    n_frames = len(exr_paths)
+        depth_files_paths = depth_files_paths[:limit_frame_num]
+    n_frames = len(depth_files_paths)
     print(f'Number of depth frames to be loaded: {n_frames}')
 
     # Open the output file for writing
     output_path = os.path.join(seq_out_path, vid_file_name)
 
     # Compute the size
-    example_file = OpenEXR.InputFile(exr_paths[0])
+    example_file = OpenEXR.InputFile(depth_files_paths[0])
     dw = example_file.header()['dataWindow']
     frame_size = (dw.max.x - dw.min.x + 1, dw.max.y - dw.min.y + 1)
 
     depth_frames = np.zeros((n_frames, frame_size[0], frame_size[1]), dtype=np.float32)
 
     # Iterate over the EXR files and add them to the video
-    for i_frame, exr_path in enumerate(exr_paths):
+    for i_frame, exr_path in enumerate(depth_files_paths):
         # Open the EXR file
         file = OpenEXR.InputFile(exr_path)
         # Read channels as floats, the RGB channels are identical, and represent the depth
@@ -125,4 +128,3 @@ def save_depth_frames(seq_in_path, seq_out_path, vid_file_name, frame_rate, limi
 
     save_depth_video(depth_frames, output_path, frame_rate, mode='heatmap')
     save_depth_video(depth_frames, output_path, frame_rate, mode='validity')
-

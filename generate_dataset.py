@@ -45,8 +45,6 @@ for seq_in_path in seq_paths:
 
     frame_rate = 20  # shotPerSec":"float(20)
 
-
-    # Create video from frame sequence
     create_rgb_video(seq_in_path=seq_in_path,
                      seq_out_path=seq_out_path,
                      vid_file_name=seq_name + '_rgb',
