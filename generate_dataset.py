@@ -16,8 +16,7 @@ parser.add_argument('--sim_out_path', type=str, required=True,
 args = parser.parse_args()
 
 sim_out_path = os.path.abspath(args.sim_out_path)
-dataset_out_path = sim_out_path + '_dataset'
-
+dataset_out_path = sim_out_path + '_datasets'
 
 if not os.path.isdir(dataset_out_path):
     os.makedirs(dataset_out_path)
@@ -45,16 +44,16 @@ for seq_in_path in seq_paths:
 
     frame_rate = 20  # shotPerSec":"float(20)
 
+    save_depth_frames(seq_in_path=seq_in_path,
+                      seq_out_path=seq_out_path,
+                      vid_file_name=seq_name + '_depth',
+                      frame_rate=frame_rate)
+
     create_rgb_video(seq_in_path=seq_in_path,
                      seq_out_path=seq_out_path,
                      vid_file_name=seq_name + '_rgb',
                      frame_rate=frame_rate,
                      ffmpeg_path=args.ffmpeg_path)
-
-    save_depth_frames(seq_in_path=seq_in_path,
-                      seq_out_path=seq_out_path,
-                      vid_file_name=seq_name + '_depth',
-                      frame_rate=frame_rate)
 
     # depth_exr{i} = exrread(['path\SUK_L_depth',num2str(i,'%05d'),'.exr']); end
     #

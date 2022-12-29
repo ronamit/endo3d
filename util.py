@@ -1,10 +1,9 @@
-import array
 import glob
 import os
 import subprocess
 
-import Imath
-import OpenEXR
+os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
+
 import cv2
 import h5py
 import matplotlib.pyplot as plt
@@ -100,20 +99,19 @@ def save_depth_frames(seq_in_path, seq_out_path, vid_file_name, frame_rate, limi
     output_path = os.path.join(seq_out_path, vid_file_name)
 
     # Compute the size
-    example_file = OpenEXR.InputFile(depth_files_paths[0])
-    dw = example_file.header()['dataWindow']
-    frame_size = (dw.max.x - dw.min.x + 1, dw.max.y - dw.min.y + 1)
+    depth_img = cv2.imread(depth_files_paths[0], cv2.IMREAD_ANYCOLOR | cv2.IMREAD_ANYDEPTH)
+
+    frame_size = depth_img.shape[:2]
 
     depth_frames = np.zeros((n_frames, frame_size[0], frame_size[1]), dtype=np.float32)
 
     # Iterate over the EXR files and add them to the video
     for i_frame, exr_path in enumerate(depth_files_paths):
-        # Open the EXR file
-        file = OpenEXR.InputFile(exr_path)
-        # Read channels as floats, the RGB channels are identical, and represent the depth
-        FLOAT = Imath.PixelType(Imath.PixelType.FLOAT)
-        R_chan = array.array('f', file.channel('R', FLOAT)).tolist()
-        depth_img = np.reshape(R_chan, frame_size)
+        # All 3 channels are the same (depth)
+        depth_img = cv2.imread(exr_path, cv2.IMREAD_ANYCOLOR | cv2.IMREAD_ANYDEPTH)[:, :, 0]
+
+        # R_chan = array.array('f', file.channel('R', FLOAT)).tolist()
+        # depth_img = np.reshape(R_chan, frame_size)
         depth_frames[i_frame] = depth_img
 
     print(f'Min depth: {np.min(depth_frames.flatten())}, Max depth: {np.max(depth_frames.flatten())}')
