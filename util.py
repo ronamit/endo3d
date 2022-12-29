@@ -31,22 +31,26 @@ def create_rgb_video(seq_in_path, seq_out_path, vid_file_name, frame_rate, ffmpe
     print(f'Video saved to: {output_path}')
 
 
-def save_heatmap_video(depth_frames, output_path, frame_rate):
+def save_depth_video(depth_frames, output_path, frame_rate, mode='heatmap'):
     n_frames = depth_frames.shape[0]
     frame_size = depth_frames.shape[1:]
     fcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')  # codec
-    out = cv2.VideoWriter(output_path + '_video.mp4',
+    out = cv2.VideoWriter(f'{output_path}_video_{mode}.mp4',
                           fcc,
                           fps=frame_rate,
-                          frameSize=(frame_size[1], frame_size[0]),
-                          isColor=False)
+                          frameSize=(frame_size[1], frame_size[0]))
     fig, ax = plt.subplots()
     # Loop through each frame of the matrix and write it to the video
     for i in range(n_frames):
         frame = depth_frames[i]
         dpi = 100
         fig.set_size_inches(frame_size[0] / dpi, frame_size[1] / dpi)
-        ax.imshow(frame, cmap='hot', interpolation='nearest')
+        if mode == 'heatmap':
+            ax.imshow(frame, cmap='hot', interpolation='nearest')
+        elif mode == 'validity':
+            ax.imshow(frame > 0,  interpolation='nearest')
+        else:
+            raise ValueError
         plt.axis('off')
         plt.axis('image')
         # remove white padding
@@ -67,7 +71,7 @@ def save_heatmap_video(depth_frames, output_path, frame_rate):
     print(f'Depth video saved to: {output_path}')
 
 
-def save_depth_frames(seq_in_path, seq_out_path, vid_file_name, frame_rate, limit_frame_num=0):
+def save_depth_frames(seq_in_path, seq_out_path, vid_file_name, frame_rate, limit_frame_num=20):
     '''
     Load a sequence of depth images from a folder
     '''
@@ -111,4 +115,6 @@ def save_depth_frames(seq_in_path, seq_out_path, vid_file_name, frame_rate, limi
         hf.create_dataset(vid_file_name, data=depth_frames, compression='gzip')
     print(f'Depth frames saved to: {output_path}.h5')
 
-    save_heatmap_video(depth_frames, output_path, frame_rate)
+    save_depth_video(depth_frames, output_path, frame_rate, mode='heatmap')
+    save_depth_video(depth_frames, output_path, frame_rate, mode='validity')
+
