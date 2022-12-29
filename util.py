@@ -21,11 +21,17 @@ def create_rgb_video(seq_in_path, seq_out_path, vid_file_name, frame_rate, ffmpe
 
     output_path = os.path.join(seq_out_path, vid_file_name) + '.mp4'
 
-    command = [ffmpeg_path, '-y',
+    frames_paths = glob.glob(os.path.join(seq_in_path, f'{image_prefix}*.png'))
+
+    print(f'Number of RGB frames to be loaded: {len(frames_paths)}')
+
+    command = [ffmpeg_path,
+               '-hide_banner', '-loglevel',  'error',  '-nostats',  # less verbose
+               '-y',
                '-framerate', str(frame_rate),
                '-i', image_prefix + '%05d.png',
                '-vcodec', 'libx265',  # codec
-               '-crf', '15',  # compression vs. quality factor - see https://trac.ffmpeg.org/wiki/Encode/H.265
+               '-crf', '15',  # compression vs. quality factor - see https://trac.ffmpeg.org/wiki/Encode/H.265,
                output_path]
     subprocess.run(command)
     print(f'Video saved to: {output_path}')
@@ -85,6 +91,8 @@ def save_depth_frames(seq_in_path, seq_out_path, vid_file_name, frame_rate, limi
         exr_paths = exr_paths[:limit_frame_num]
 
     n_frames = len(exr_paths)
+    print(f'Number of depth frames to be loaded: {n_frames}')
+
     # Open the output file for writing
     output_path = os.path.join(seq_out_path, vid_file_name)
 
