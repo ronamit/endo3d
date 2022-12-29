@@ -71,7 +71,7 @@ def save_depth_video(depth_frames, output_path, frame_rate, mode='heatmap'):
     print(f'Depth video saved to: {output_path}')
 
 
-def save_depth_frames(seq_in_path, seq_out_path, vid_file_name, frame_rate, limit_frame_num=20):
+def save_depth_frames(seq_in_path, seq_out_path, vid_file_name, frame_rate, limit_frame_num=0):
     '''
     Load a sequence of depth images from a folder
     '''
