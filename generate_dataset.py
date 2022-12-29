@@ -13,11 +13,11 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--ffmpeg_path', type=str, required=True, help='path to ffmpeg executable')
 parser.add_argument('--sim_out_path', type=str, required=True,
                     help=' path to the simulator output (the folder containing the `Sequence_XXX` folders)')
-parser.add_argument('--dataset_out_path', type=str, default='./dataset_out', help='path to the output dataset')
 args = parser.parse_args()
 
-dataset_out_path = os.path.abspath(args.dataset_out_path)
 sim_out_path = os.path.abspath(args.sim_out_path)
+dataset_out_path = sim_out_path + '_dataset'
+
 
 if not os.path.isdir(dataset_out_path):
     os.makedirs(dataset_out_path)
