@@ -19,10 +19,9 @@ def main():
 
     sim_out_path = os.path.abspath(args.sim_out_path)
     dataset_out_path = sim_out_path + '_datasets'
-
     if not os.path.isdir(dataset_out_path):
         os.makedirs(dataset_out_path)
-
+    print(f'Datasets will be saved to {dataset_out_path}')
     seq_paths = glob.glob(sim_out_path + '/*/')
     print(seq_paths)
 
