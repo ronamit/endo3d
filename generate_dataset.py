@@ -61,18 +61,6 @@ def main():
                           vid_file_name=seq_name + '_Depth',
                           frame_rate=frame_rate)
 
-        # depth_exr{i} = exrread(['path\SUK_L_depth',num2str(i,'%05d'),'.exr']); end
-        #
-        # scan_gt = cell(1,num);
-        #
-        # depth_scale = 5.0;
-        #
-        # for i = 1:num
-        #
-        # xyzPoints = zeros(rows, cols, 3);
-        #
-        # for v = 1:rows % rows
-
 
 def create_rgb_video(seq_in_path, seq_out_path, vid_file_name, frame_rate):
     """

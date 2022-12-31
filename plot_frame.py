@@ -1,4 +1,5 @@
 import argparse
+from matplotlib import pyplot as plt
 
 from util import get_frame_at_timestamp
 
@@ -14,8 +15,10 @@ def main():
     args = parser.parse_args()
 
     vid_file_name = args.seq_name + '_RGB'
-    get_frame_at_timestamp(args.dataset_path, args.seq_name, args.frame_time, vid_file_name)
-
+    frame_exists, frame = get_frame_at_timestamp(args.dataset_path, args.seq_name, args.frame_time, vid_file_name)
+    if frame_exists:
+        plt.imshow(frame)
+        plt.show()
 
 if __name__ == '__main__':
     main()
