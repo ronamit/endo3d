@@ -23,17 +23,17 @@ def main():
     args = parser.parse_args()
 
     sim_out_path = os.path.abspath(args.sim_out_path)
-    dataset_out_path = sim_out_path + '_Dataset'
-    if not os.path.isdir(dataset_out_path):
-        os.makedirs(dataset_out_path)
-    print(f'Datasets will be saved to {dataset_out_path}')
+    dataset_path = sim_out_path + '_Dataset'
+    if not os.path.isdir(dataset_path):
+        os.makedirs(dataset_path)
+    print(f'Datasets will be saved to {dataset_path}')
     seq_paths = glob.glob(sim_out_path + '/*/')
     print('Simulation sequences to be loaded: ', seq_paths)
 
     for seq_in_path in seq_paths:
         print('Loading: ', seq_in_path)
         seq_name = os.path.basename(os.path.normpath(seq_in_path))
-        seq_out_path = os.path.join(dataset_out_path, seq_name)
+        seq_out_path = os.path.join(dataset_path, seq_name)
         if not os.path.isdir(seq_out_path):
             os.makedirs(seq_out_path)
 
@@ -53,8 +53,8 @@ def main():
 
         sensor_width = 10.26  # [millimeter]
         sensor_height = 7.695  # [millimeter]
-        sx = sensor_width / frame_width   # [millimeter/pixel]
-        sy = sensor_height / frame_height   # [millimeter/pixel]
+        sx = sensor_width / frame_width  # [millimeter/pixel]
+        sy = sensor_height / frame_height  # [millimeter/pixel]
         fx = focal_length / sx  # [pixels]
         fy = focal_length / sy  # [pixels]
         cx = frame_width / 2.0  # middle of the image in x-axis [pixels]
@@ -84,6 +84,7 @@ def main():
                           seq_out_path=seq_out_path,
                           vid_file_name=seq_name + '_Depth',
                           frame_rate=frame_rate)
+
 
 def create_rgb_video(seq_in_path, seq_out_path, vid_file_name, frame_rate):
     """

@@ -2,7 +2,7 @@ import glob
 import os
 import re
 import numpy as np
-
+import json
 os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
 import cv2
 
@@ -36,6 +36,14 @@ def find_between_str(file_path, before_str, after_str):
     return matches[0]
 
 
+def get_metadata(dataset_path, seq_name):
+    seq_out_path = os.path.join(dataset_path, seq_name)
+    metadata_path = os.path.join(seq_out_path, seq_name + '_metadata.json')
+    with open(metadata_path, 'r') as fp:
+        metadata = json.load(fp)
+    return metadata
+
+
 def fig2img(fig):
     fig.canvas.draw()
     # convert canvas to image using numpy
@@ -46,12 +54,12 @@ def fig2img(fig):
     return img
 
 
-def get_frame_at_timestamp(dataset_path, seq_name, desired_time, vid_file_name):
+def get_frame_at_timestamp(seq_out_path, desired_time, vid_file_name):
     """
     get the frame at a given timestamp
     :param desired_time:  the in-sequence time of the frame to load [seconds]]
     """
-    vid_path = os.path.join(dataset_path, seq_name, vid_file_name) + '.mp4'
+    vid_path = os.path.join(seq_out_path, vid_file_name) + '.mp4'
     assert os.path.isfile(vid_path), f'Video file not found: {vid_path}'
     cap = cv2.VideoCapture(vid_path)
     fps = cap.get(cv2.CAP_PROP_FPS)
