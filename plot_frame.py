@@ -15,10 +15,15 @@ def main():
     args = parser.parse_args()
 
     vid_file_name = args.seq_name + '_RGB'
-    frame_exists, frame = get_frame_at_timestamp(args.dataset_path, args.seq_name, args.frame_time, vid_file_name)
-    if frame_exists:
-        plt.imshow(frame)
-        plt.show()
+    rgb_frame, _ = get_frame_at_timestamp(args.dataset_path, args.seq_name, args.frame_time, vid_file_name)
+    plt.imshow(rgb_frame)
+    plt.show()
+
+    depth_vid_file_name = args.seq_name + '_Depth'
+    depth_frame, _ = get_frame_at_timestamp(args.dataset_path, args.seq_name, args.frame_time, depth_vid_file_name)
+    plt.imshow(depth_frame)
+    plt.show()
+
 
 if __name__ == '__main__':
     main()

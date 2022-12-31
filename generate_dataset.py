@@ -6,13 +6,14 @@ import argparse
 import glob
 import os
 import shutil
+import json
 
 import cv2
 import h5py
 import numpy as np
 from matplotlib import pyplot as plt
 
-from util import get_seq_id, fig2img
+from util import get_seq_id, fig2img, find_between_str
 
 
 def main():
@@ -35,21 +36,44 @@ def main():
         seq_out_path = os.path.join(dataset_out_path, seq_name)
         if not os.path.isdir(seq_out_path):
             os.makedirs(seq_out_path)
-        shutil.copy2(os.path.join(seq_in_path, 'MySettings.set'),
-                     os.path.join(seq_out_path, seq_name + '_Settings.set'))
 
-        # camera intrinsic parameters
+        # save metadata
+        sim_settings_path = os.path.join(seq_in_path, 'MySettings.set')
+        shutil.copy2(sim_settings_path, os.path.join(seq_out_path, 'Sim_GUI_Settings.set'))  # copy the settings file
+        # Extract the settings from the settings file:
+        camFOV = find_between_str(sim_settings_path, r'"camFOV":"float\(', r'\)"')
+        camFOV = float(camFOV)  # camera FOV [deg]
+        frame_width = find_between_str(sim_settings_path, r'"shotResX":"float\(', r'\)"')
+        frame_width = int(frame_width)  # [pixels]
+        frame_height = find_between_str(sim_settings_path, r'"shotResX":"float\(', r'\)"')
+        frame_height = int(frame_height)  # [pixels]
+        frame_rate = find_between_str(sim_settings_path, r'"shotPerSec":"float\(', r'\)"')
+        frame_rate = float(frame_rate)  # [Hz]
         focal_length = 4.969783  # [millimeter]
+
         sensor_width = 10.26  # [millimeter]
         sensor_height = 7.695  # [millimeter]
-        cols = 320  # [pixels] image width
-        rows = 240  # [pixels]  image height
-        fx = focal_length * cols / sensor_width  # focal length in x-axis [pixels]
-        fy = focal_length * rows / sensor_height  # focal length in y-axis [pixels]
-        cx = cols / 2.0  # middle of the image in x-axis [pixels]
-        cy = rows / 2.0  # middle of the image in y-axis [pixels]
+        sx = sensor_width / frame_width   # [millimeter/pixel]
+        sy = sensor_height / frame_height   # [millimeter/pixel]
+        fx = focal_length / sx  # [pixels]
+        fy = focal_length / sy  # [pixels]
+        cx = frame_width / 2.0  # middle of the image in x-axis [pixels]
+        cy = frame_height / 2.0  # middle of the image in y-axis [pixels]
 
-        frame_rate = 20  # shotPerSec":"float(20)
+        metadata = {'focal_length': focal_length,
+                    'sensor_width': sensor_width,
+                    'sensor_height': sensor_height,
+                    'frame_width': frame_width,
+                    'frame_height': frame_height,
+                    'fx': fx,
+                    'fy': fy,
+                    'cx': cx,
+                    'cy': cy,
+                    'frame_rate': frame_rate}
+
+        metadata_path = os.path.join(seq_out_path, seq_name + '_metadata.json')
+        with open(metadata_path, 'w', ) as fp:
+            json.dump(metadata, fp, sort_keys=True, indent=4)
 
         create_rgb_video(seq_in_path=seq_in_path,
                          seq_out_path=seq_out_path,
@@ -60,7 +84,6 @@ def main():
                           seq_out_path=seq_out_path,
                           vid_file_name=seq_name + '_Depth',
                           frame_rate=frame_rate)
-
 
 def create_rgb_video(seq_in_path, seq_out_path, vid_file_name, frame_rate):
     """
@@ -130,7 +153,7 @@ def save_depth_video(depth_frames, output_path, frame_rate, mode='gray_fixed_sca
     n_frames = depth_frames.shape[0]
     frame_size = depth_frames.shape[1:]
     fcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')  # codec
-    out = cv2.VideoWriter(f'{output_path}_{mode}.mp4',
+    out = cv2.VideoWriter(f'{output_path}.mp4',
                           fcc,
                           fps=frame_rate,
                           frameSize=(frame_size[1], frame_size[0]))
