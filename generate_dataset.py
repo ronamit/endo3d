@@ -6,7 +6,6 @@ import argparse
 import glob
 import os
 import shutil
-import subprocess
 
 import cv2
 import h5py
@@ -18,7 +17,6 @@ from util import get_seq_id, fig2img
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--ffmpeg_path', type=str, required=True, help='path to ffmpeg executable')
     parser.add_argument('--sim_out_path', type=str, required=True,
                         help=' path to the Unity simulator output')
     args = parser.parse_args()
@@ -53,16 +51,17 @@ def main():
 
         frame_rate = 20  # shotPerSec":"float(20)
 
+        create_rgb_video(seq_in_path=seq_in_path,
+                         seq_out_path=seq_out_path,
+                         vid_file_name=seq_name + '_RGB',
+                         frame_rate=frame_rate)
+
         save_depth_frames(seq_in_path=seq_in_path,
                           seq_out_path=seq_out_path,
                           vid_file_name=seq_name + '_Depth',
                           frame_rate=frame_rate)
 
-        create_rgb_video(seq_in_path=seq_in_path,
-                         seq_out_path=seq_out_path,
-                         vid_file_name=seq_name + '_RGB',
-                         frame_rate=frame_rate,
-                         ffmpeg_path=args.ffmpeg_path)
+
 
         # depth_exr{i} = exrread(['path\SUK_L_depth',num2str(i,'%05d'),'.exr']); end
         #
@@ -77,7 +76,7 @@ def main():
         # for v = 1:rows % rows
 
 
-def create_rgb_video(seq_in_path, seq_out_path, vid_file_name, frame_rate, ffmpeg_path):
+def create_rgb_video(seq_in_path, seq_out_path, vid_file_name, frame_rate):
     """
     Convert a sequence of images to a video using ffmpeg
     """
@@ -85,20 +84,41 @@ def create_rgb_video(seq_in_path, seq_out_path, vid_file_name, frame_rate, ffmpe
     output_path = os.path.join(seq_out_path, vid_file_name) + '.mp4'
     seq_id = get_seq_id(seq_in_path)
     frames_paths = glob.glob(os.path.join(seq_in_path, f'{seq_id}_*.png'))
-    image_prefix = os.path.join(seq_in_path, seq_id + '_')
     print(f'Number of RGB frames: {len(frames_paths)}')
+    frame_size = cv2.imread(frames_paths[0]).shape[:2]
 
-    command = [ffmpeg_path,
-               '-hide_banner', '-loglevel', 'error', '-nostats',  # less verbose
-               '-y',
-               '-framerate', str(frame_rate),
-               '-i', image_prefix + '%05d.png',
-               '-vcodec', 'libx265',  # codec
-               '-crf', '15',  # compression vs. quality factor - see https://trac.ffmpeg.org/wiki/Encode/H.265,
-               output_path]
-    subprocess.run(command)
+    output = cv2.VideoWriter(output_path,
+                             cv2.VideoWriter_fourcc(*'XVID'),
+                             frame_rate,
+                             frame_size)
+    for frame_path in frames_paths:
+        output.write(cv2.imread(frame_path))
+
     print(f'Video saved to: {output_path}')
 
+
+
+# def create_rgb_video(seq_in_path, seq_out_path, vid_file_name, frame_rate, ffmpeg_path):
+#     """
+#     Convert a sequence of images to a video using ffmpeg
+#     """
+#
+#     output_path = os.path.join(seq_out_path, vid_file_name) + '.mp4'
+#     seq_id = get_seq_id(seq_in_path)
+#     frames_paths = glob.glob(os.path.join(seq_in_path, f'{seq_id}_*.png'))
+#     image_prefix = os.path.join(seq_in_path, seq_id + '_')
+#     print(f'Number of RGB frames: {len(frames_paths)}')
+#
+#     command = [ffmpeg_path,
+#                '-hide_banner', '-loglevel', 'error', '-nostats',  # less verbose
+#                '-y',
+#                '-framerate', str(frame_rate),
+#                '-i', image_prefix + '%05d.png',
+#                '-vcodec', 'libx265',  # codec
+#                '-crf', '15',  # compression vs. quality factor - see https://trac.ffmpeg.org/wiki/Encode/H.265,
+#                output_path]
+#     subprocess.run(command)
+#     print(f'Video saved to: {output_path}')
 
 def save_depth_frames(seq_in_path, seq_out_path, vid_file_name, frame_rate, limit_frame_num=0):
     """

@@ -12,15 +12,6 @@ Camera calibration parameters: fx = 232.5044678; % unit in pixel fy = 232.504467
 
 
 ## Pre-requisites
-* Local [ffmpeg executable](https://ffmpeg.org/download.html)
-  * For Mac with ARM architecture:
-    * [download ffmpeg](https://www.osxexperts.net/) and put the ffmpeg file a some local path. 
-    * Set it as executable with $ chmod 755 ffmpeg
-  * For Windows:
-   [download ffmpeg](https://ffmpeg.org/download.html)
-   and put in a some local location.
-
-* Packages:
   * numpy 
   * matplotlib
   * h5py
@@ -29,5 +20,4 @@ Camera calibration parameters: fx = 232.5044678; % unit in pixel fy = 232.504467
  
 ## How to run dataset generation
 Run `generate_dataset.py` with the following required arguments:
-* --ffmpeg_path: path to ffmpeg executable
 * --sim_out_path: path to the simulator output (the folder containing the `Sequence_XXX` folders)

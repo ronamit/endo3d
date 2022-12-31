@@ -1,5 +1,6 @@
 import glob
 import os
+
 import numpy as np
 
 os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
