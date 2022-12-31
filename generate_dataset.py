@@ -100,17 +100,20 @@ def create_rgb_video(seq_in_path, seq_out_path, vid_file_name, frame_rate):
     output_path = os.path.join(seq_out_path, vid_file_name) + '.mp4'
     seq_id = get_seq_id(seq_in_path)
     frames_paths = glob.glob(os.path.join(seq_in_path, f'{seq_id}_*.png'))
+    frames_paths.sort()
     print(f'Number of RGB frames: {len(frames_paths)}')
     frame_size = cv2.imread(frames_paths[0]).shape[:2]
-    fcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')  # codec
+    fourcc = cv2.VideoWriter_fourcc(*'avc1')
 
-    output = cv2.VideoWriter(output_path,
-                             fcc,
-                             frame_rate,
-                             frame_size)
+    out_video = cv2.VideoWriter(output_path,
+                                fourcc,
+                                frame_rate,
+                                frame_size,
+                                isColor=True)
     for frame_path in frames_paths:
-        output.write(cv2.imread(frame_path))
-    output.release()
+        im = cv2.imread(frame_path)
+        out_video.write(im)
+    out_video.release()
     print(f'Video saved to: {output_path}')
 
 
@@ -160,11 +163,11 @@ def save_depth_frames(seq_in_path, seq_out_path, vid_file_name, frame_rate, limi
 def save_depth_video(depth_frames, output_path, frame_rate, mode='gray_fixed_scale'):
     n_frames = depth_frames.shape[0]
     frame_size = depth_frames.shape[1:]
-    fcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')  # codec
-    out = cv2.VideoWriter(f'{output_path}.mp4',
-                          fcc,
-                          fps=frame_rate,
-                          frameSize=(frame_size[1], frame_size[0]))
+    fourcc = cv2.VideoWriter_fourcc(*'avc1')
+    out_vid = cv2.VideoWriter(f'{output_path}.mp4',
+                              fourcc,
+                              fps=frame_rate,
+                              frameSize=(frame_size[1], frame_size[0]))
 
     fig, ax = plt.subplots()
     # Loop through each frame of the matrix and write it to the video
@@ -186,11 +189,11 @@ def save_depth_video(depth_frames, output_path, frame_rate, mode='gray_fixed_sca
         # remove white padding
         plt.subplots_adjust(left=0, right=1, top=1, bottom=0)
         im = fig2img(fig)
-        out.write(im)
+        out_vid.write(im)
         plt.cla()
     plt.close(fig)
     # Release the VideoWriter object
-    out.release()
+    out_vid.release()
     print(f'Depth video saved to: {output_path}')
 
 

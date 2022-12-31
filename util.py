@@ -47,7 +47,7 @@ def get_metadata(dataset_path, seq_name):
 def fig2img(fig):
     fig.canvas.draw()
     # convert canvas to image using numpy
-    img = np.fromstring(fig.canvas.tostring_rgb(), dtype='uint8')
+    img = np.frombuffer(fig.canvas.tostring_rgb(), dtype='uint8')
     img = img.reshape(fig.canvas.get_width_height()[::-1] + (3,))
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     np.flip(img, 1)
@@ -57,6 +57,8 @@ def fig2img(fig):
 def get_frame_at_timestamp(seq_out_path, desired_time, vid_file_name):
     """
     get the frame at a given timestamp
+    :param vid_file_name:
+    :param seq_out_path:
     :param desired_time:  the in-sequence time of the frame to load [seconds]]
     """
     vid_path = os.path.join(seq_out_path, vid_file_name) + '.mp4'
