@@ -41,18 +41,20 @@ def main():
         sim_settings_path = os.path.join(seq_in_path, 'MySettings.set')
         shutil.copy2(sim_settings_path, os.path.join(seq_out_path, 'Sim_GUI_Settings.set'))  # copy the settings file
         # Extract the settings from the settings file:
-        camFOV = find_between_str(sim_settings_path, r'"camFOV":"float\(', r'\)"')
-        camFOV = float(camFOV)  # camera FOV [deg]
+        camFOV_deg = find_between_str(sim_settings_path, r'"camFOV":"float\(', r'\)"')
+        camFOV_deg = float(camFOV_deg)  # camera FOV [deg]
+        camFOV_rad = np.deg2rad(camFOV_deg)  # camera FOV [rad]
         frame_width = find_between_str(sim_settings_path, r'"shotResX":"float\(', r'\)"')
         frame_width = int(frame_width)  # [pixels]
         frame_height = find_between_str(sim_settings_path, r'"shotResX":"float\(', r'\)"')
         frame_height = int(frame_height)  # [pixels]
         frame_rate = find_between_str(sim_settings_path, r'"shotPerSec":"float\(', r'\)"')
         frame_rate = float(frame_rate)  # [Hz]
-        focal_length = 4.969783  # [millimeter]
 
         sensor_width = 10.26  # [millimeter]
         sensor_height = 7.695  # [millimeter]
+        sensor_radius = 0.5 * np.sqrt(sensor_width ** 2 + sensor_height ** 2)  # [millimeter]
+        focal_length = sensor_radius * np.tan(camFOV_rad / 2.0)  # [millimeter]
         sx = sensor_width / frame_width  # [millimeter/pixel]
         sy = sensor_height / frame_height  # [millimeter/pixel]
         fx = focal_length / sx  # [pixels]
