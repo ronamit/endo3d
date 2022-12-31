@@ -61,8 +61,6 @@ def main():
                           vid_file_name=seq_name + '_Depth',
                           frame_rate=frame_rate)
 
-
-
         # depth_exr{i} = exrread(['path\SUK_L_depth',num2str(i,'%05d'),'.exr']); end
         #
         # scan_gt = cell(1,num);
@@ -97,7 +95,6 @@ def create_rgb_video(seq_in_path, seq_out_path, vid_file_name, frame_rate):
     print(f'Video saved to: {output_path}')
 
 
-
 # def create_rgb_video(seq_in_path, seq_out_path, vid_file_name, frame_rate, ffmpeg_path):
 #     """
 #     Convert a sequence of images to a video using ffmpeg
@@ -120,7 +117,7 @@ def create_rgb_video(seq_in_path, seq_out_path, vid_file_name, frame_rate):
 #     subprocess.run(command)
 #     print(f'Video saved to: {output_path}')
 
-def save_depth_frames(seq_in_path, seq_out_path, vid_file_name, frame_rate, limit_frame_num=0):
+def save_depth_frames(seq_in_path, seq_out_path, vid_file_name, frame_rate, limit_frame_num=0, save_h5_file=False):
     """
     Load a sequence of depth images from a folder
     """
@@ -159,14 +156,15 @@ def save_depth_frames(seq_in_path, seq_out_path, vid_file_name, frame_rate, limi
     plt.close()
 
     # Save as matrix
-    with h5py.File(output_path + '.h5', 'w') as hf:
-        hf.create_dataset(vid_file_name, data=depth_frames, compression='gzip')
-    print(f'Depth frames saved to: {output_path}.h5')
+    if save_h5_file:
+        with h5py.File(output_path + '.h5', 'w') as hf:
+            hf.create_dataset(vid_file_name, data=depth_frames, compression='gzip')
+        print(f'Depth frames saved to: {output_path}.h5')
 
-    save_depth_video(depth_frames, output_path, frame_rate, mode='heatmap')
+    save_depth_video(depth_frames, output_path, frame_rate, mode='gray_fixed_scale')
 
 
-def save_depth_video(depth_frames, output_path, frame_rate, mode='heatmap'):
+def save_depth_video(depth_frames, output_path, frame_rate, mode='gray_fixed_scale'):
     n_frames = depth_frames.shape[0]
     frame_size = depth_frames.shape[1:]
     fcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')  # codec
@@ -181,7 +179,10 @@ def save_depth_video(depth_frames, output_path, frame_rate, mode='heatmap'):
         frame = depth_frames[i]
         dpi = 100
         fig.set_size_inches(frame_size[0] / dpi, frame_size[1] / dpi)
-        if mode == 'heatmap':
+        if mode == 'gray_fixed_scale':
+            scale_factor = 10
+            ax.imshow(frame * scale_factor, cmap='gray', interpolation='nearest')
+        elif mode == 'heatmap':
             ax.imshow(frame, cmap='hot', interpolation='nearest')
         elif mode == 'validity':
             ax.imshow(frame > 0, interpolation='nearest')  # a binary image
