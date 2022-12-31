@@ -100,7 +100,7 @@ def create_rgb_video(seq_in_path, seq_out_path, vid_file_name, frame_rate, ffmpe
     print(f'Video saved to: {output_path}')
 
 
-def save_depth_frames(seq_in_path, seq_out_path, vid_file_name, frame_rate, limit_frame_num):
+def save_depth_frames(seq_in_path, seq_out_path, vid_file_name, frame_rate, limit_frame_num=0):
     """
     Load a sequence of depth images from a folder
     """

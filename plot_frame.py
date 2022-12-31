@@ -14,7 +14,7 @@ def main():
     args = parser.parse_args()
 
     vid_file_name = args.seq_name + '_RGB'
-    get_frame_at_timestamp(args.dataset_path, args.seq_name, args.frame_time, vid_file_name, args.ffmpeg_path)
+    get_frame_at_timestamp(args.dataset_path, args.seq_name, args.frame_time, vid_file_name)
 
 
 if __name__ == '__main__':
