@@ -102,9 +102,10 @@ def create_rgb_video(seq_in_path, seq_out_path, vid_file_name, frame_rate):
     frames_paths = glob.glob(os.path.join(seq_in_path, f'{seq_id}_*.png'))
     print(f'Number of RGB frames: {len(frames_paths)}')
     frame_size = cv2.imread(frames_paths[0]).shape[:2]
+    fcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')  # codec
 
     output = cv2.VideoWriter(output_path,
-                             cv2.VideoWriter_fourcc('m', 'p', '4', 'v'),
+                             fcc,
                              frame_rate,
                              frame_size)
     for frame_path in frames_paths:
