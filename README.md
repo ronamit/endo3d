@@ -25,8 +25,8 @@ Camera calibration parameters: fx = 232.5044678; % unit in pixel fy = 232.504467
   * matplotlib
   * h5py
   * [OpenCV](https://opencv.org/)
-  * [GStreamer runtime](https://gstreamer.freedesktop.org/documentation/installing/?gi-language=python)
 
+ 
 ## How to run dataset generation
 Run `generate_dataset.py` with the following required arguments:
 * --ffmpeg_path: path to ffmpeg executable

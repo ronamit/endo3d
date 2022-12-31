@@ -13,7 +13,7 @@ import h5py
 import numpy as np
 from matplotlib import pyplot as plt
 
-from util import get_seq_id
+from util import get_seq_id, fig2img
 
 
 def main():
@@ -100,7 +100,7 @@ def create_rgb_video(seq_in_path, seq_out_path, vid_file_name, frame_rate, ffmpe
     print(f'Video saved to: {output_path}')
 
 
-def save_depth_frames(seq_in_path, seq_out_path, vid_file_name, frame_rate, limit_frame_num=0):
+def save_depth_frames(seq_in_path, seq_out_path, vid_file_name, frame_rate, limit_frame_num):
     """
     Load a sequence of depth images from a folder
     """
@@ -154,6 +154,7 @@ def save_depth_video(depth_frames, output_path, frame_rate, mode='heatmap'):
                           fcc,
                           fps=frame_rate,
                           frameSize=(frame_size[1], frame_size[0]))
+
     fig, ax = plt.subplots()
     # Loop through each frame of the matrix and write it to the video
     for i in range(n_frames):
@@ -170,15 +171,8 @@ def save_depth_video(depth_frames, output_path, frame_rate, mode='heatmap'):
         plt.axis('image')
         # remove white padding
         plt.subplots_adjust(left=0, right=1, top=1, bottom=0)
-        # redraw the canvas
-        fig = plt.gcf()
-        fig.canvas.draw()
-        # convert canvas to image using numpy
-        img = np.fromstring(fig.canvas.tostring_rgb(), dtype=np.uint8, sep='')
-        img = img.reshape(fig.canvas.get_width_height()[::-1] + (3,))
-        img_cv = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        np.flip(img_cv, 1)
-        out.write(img_cv)
+        im = fig2img(fig)
+        out.write(im)
         plt.cla()
     plt.close(fig)
     # Release the VideoWriter object
