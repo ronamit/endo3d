@@ -91,31 +91,9 @@ def create_rgb_video(seq_in_path, seq_out_path, vid_file_name, frame_rate):
                              frame_size)
     for frame_path in frames_paths:
         output.write(cv2.imread(frame_path))
-
+    output.release()
     print(f'Video saved to: {output_path}')
 
-
-# def create_rgb_video(seq_in_path, seq_out_path, vid_file_name, frame_rate, ffmpeg_path):
-#     """
-#     Convert a sequence of images to a video using ffmpeg
-#     """
-#
-#     output_path = os.path.join(seq_out_path, vid_file_name) + '.mp4'
-#     seq_id = get_seq_id(seq_in_path)
-#     frames_paths = glob.glob(os.path.join(seq_in_path, f'{seq_id}_*.png'))
-#     image_prefix = os.path.join(seq_in_path, seq_id + '_')
-#     print(f'Number of RGB frames: {len(frames_paths)}')
-#
-#     command = [ffmpeg_path,
-#                '-hide_banner', '-loglevel', 'error', '-nostats',  # less verbose
-#                '-y',
-#                '-framerate', str(frame_rate),
-#                '-i', image_prefix + '%05d.png',
-#                '-vcodec', 'libx265',  # codec
-#                '-crf', '15',  # compression vs. quality factor - see https://trac.ffmpeg.org/wiki/Encode/H.265,
-#                output_path]
-#     subprocess.run(command)
-#     print(f'Video saved to: {output_path}')
 
 def save_depth_frames(seq_in_path, seq_out_path, vid_file_name, frame_rate, limit_frame_num=0, save_h5_file=False):
     """
@@ -136,18 +114,14 @@ def save_depth_frames(seq_in_path, seq_out_path, vid_file_name, frame_rate, limi
 
     # Compute the size
     depth_img = cv2.imread(depth_files_paths[0], cv2.IMREAD_ANYCOLOR | cv2.IMREAD_ANYDEPTH)
-
     frame_size = depth_img.shape[:2]
 
     depth_frames = np.zeros((n_frames, frame_size[0], frame_size[1]), dtype=np.float32)
 
     # Iterate over the EXR files and add them to the video
     for i_frame, exr_path in enumerate(depth_files_paths):
-        # All 3 channels are the same (depth)
+        # All 3 channels are the same (depth), so we only need to read one
         depth_img = cv2.imread(exr_path, cv2.IMREAD_ANYCOLOR | cv2.IMREAD_ANYDEPTH)[:, :, 0]
-
-        # R_chan = array.array('f', file.channel('R', FLOAT)).tolist()
-        # depth_img = np.reshape(R_chan, frame_size)
         depth_frames[i_frame] = depth_img
 
     print(f'Min depth: {np.min(depth_frames.flatten())}, Max depth: {np.max(depth_frames.flatten())}')
