@@ -104,7 +104,7 @@ def create_rgb_video(seq_in_path, seq_out_path, vid_file_name, frame_rate):
     frame_size = cv2.imread(frames_paths[0]).shape[:2]
 
     output = cv2.VideoWriter(output_path,
-                             cv2.VideoWriter_fourcc(*'XVID'),
+                             cv2.VideoWriter_fourcc('m', 'p', '4', 'v'),
                              frame_rate,
                              frame_size)
     for frame_path in frames_paths:
