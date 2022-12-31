@@ -37,45 +37,8 @@ def main():
         if not os.path.isdir(seq_out_path):
             os.makedirs(seq_out_path)
 
-        # save metadata
-        sim_settings_path = os.path.join(seq_in_path, 'MySettings.set')
-        shutil.copy2(sim_settings_path, os.path.join(seq_out_path, 'Sim_GUI_Settings.set'))  # copy the settings file
-        # Extract the settings from the settings file:
-        camFOV_deg = find_between_str(sim_settings_path, r'"camFOV":"float\(', r'\)"')
-        camFOV_deg = float(camFOV_deg)  # camera FOV [deg]
-        camFOV_rad = np.deg2rad(camFOV_deg)  # camera FOV [rad]
-        frame_width = find_between_str(sim_settings_path, r'"shotResX":"float\(', r'\)"')
-        frame_width = int(frame_width)  # [pixels]
-        frame_height = find_between_str(sim_settings_path, r'"shotResX":"float\(', r'\)"')
-        frame_height = int(frame_height)  # [pixels]
-        frame_rate = find_between_str(sim_settings_path, r'"shotPerSec":"float\(', r'\)"')
-        frame_rate = float(frame_rate)  # [Hz]
-
-        sensor_width = 10.26  # [millimeter]
-        sensor_height = 7.695  # [millimeter]
-        sensor_radius = 0.5 * np.sqrt(sensor_width ** 2 + sensor_height ** 2)  # [millimeter]
-        focal_length = sensor_radius * np.tan(camFOV_rad / 2.0)  # [millimeter]
-        sx = sensor_width / frame_width  # [millimeter/pixel]
-        sy = sensor_height / frame_height  # [millimeter/pixel]
-        fx = focal_length / sx  # [pixels]
-        fy = focal_length / sy  # [pixels]
-        cx = frame_width / 2.0  # middle of the image in x-axis [pixels]
-        cy = frame_height / 2.0  # middle of the image in y-axis [pixels]
-
-        metadata = {'focal_length': focal_length,
-                    'sensor_width': sensor_width,
-                    'sensor_height': sensor_height,
-                    'frame_width': frame_width,
-                    'frame_height': frame_height,
-                    'fx': fx,
-                    'fy': fy,
-                    'cx': cx,
-                    'cy': cy,
-                    'frame_rate': frame_rate}
-
-        metadata_path = os.path.join(seq_out_path, seq_name + '_metadata.json')
-        with open(metadata_path, 'w', ) as fp:
-            json.dump(metadata, fp, sort_keys=True, indent=4)
+        metadata = save_metadata(seq_in_path, seq_out_path, seq_name)
+        frame_rate = metadata['frame_rate']
 
         create_rgb_video(seq_in_path=seq_in_path,
                          seq_out_path=seq_out_path,
@@ -86,6 +49,47 @@ def main():
                           seq_out_path=seq_out_path,
                           vid_file_name=seq_name + '_Depth',
                           frame_rate=frame_rate)
+
+
+def save_metadata(seq_in_path, seq_out_path, seq_name):
+    sim_settings_path = os.path.join(seq_in_path, 'MySettings.set')
+    shutil.copy2(sim_settings_path, os.path.join(seq_out_path, 'Sim_GUI_Settings.set'))  # copy the settings file
+    # Extract the settings from the settings file:
+    camFOV_deg = find_between_str(sim_settings_path, r'"camFOV":"float\(', r'\)"')
+    camFOV_deg = float(camFOV_deg)  # camera FOV [deg]
+    camFOV_rad = np.deg2rad(camFOV_deg)  # camera FOV [rad]
+    frame_width = find_between_str(sim_settings_path, r'"shotResX":"float\(', r'\)"')
+    frame_width = int(frame_width)  # [pixels]
+    frame_height = find_between_str(sim_settings_path, r'"shotResX":"float\(', r'\)"')
+    frame_height = int(frame_height)  # [pixels]
+    frame_rate = find_between_str(sim_settings_path, r'"shotPerSec":"float\(', r'\)"')
+    frame_rate = float(frame_rate)  # [Hz]
+
+    sensor_width = 10.26  # [millimeter]  # according to https://github.com/zsustc/colon_reconstruction_dataset
+    sensor_height = 7.695  # [millimeter] # according to https://github.com/zsustc/colon_reconstruction_dataset
+    sensor_radius = 0.5 * np.sqrt(sensor_width ** 2 + sensor_height ** 2)  # [millimeter]
+    focal_length = sensor_radius * np.tan(camFOV_rad / 2.0)  # [millimeter]
+    sx = sensor_width / frame_width  # [millimeter/pixel]
+    sy = sensor_height / frame_height  # [millimeter/pixel]
+    fx = focal_length / sx  # [pixels]
+    fy = focal_length / sy  # [pixels]
+    cx = frame_width / 2.0  # middle of the image in x-axis [pixels]
+    cy = frame_height / 2.0  # middle of the image in y-axis [pixels]
+
+    metadata = {'focal_length': focal_length,
+                'sensor_width': sensor_width,
+                'sensor_height': sensor_height,
+                'frame_width': frame_width,
+                'frame_height': frame_height,
+                'fx': fx,
+                'fy': fy,
+                'cx': cx,
+                'cy': cy,
+                'frame_rate': frame_rate}
+    metadata_path = os.path.join(seq_out_path, seq_name + '_metadata.json')
+    with open(metadata_path, 'w', ) as fp:
+        json.dump(metadata, fp, sort_keys=True, indent=4)
+    return metadata
 
 
 def create_rgb_video(seq_in_path, seq_out_path, vid_file_name, frame_rate):
