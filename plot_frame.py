@@ -11,7 +11,7 @@ def main():
                         help=' path to  the dataset to be loaded')
     parser.add_argument('--seq_name', type=str, required=True,
                         help='name of sequence to be loaded')
-    parser.add_argument('--frame_time', type=float, required=True,
+    parser.add_argument('--desired_frame_time', type=float, required=True,
                         help='the in-sequence time of the frame to load [seconds]')
     args = parser.parse_args()
 
@@ -22,7 +22,7 @@ def main():
     plt.show()
 
     depth_vid_file_name = args.seq_name + '_Depth'
-    depth_frame, _ = get_frame_at_timestamp(seq_out_path, args.frame_time, depth_vid_file_name)
+    depth_frame, _ = get_frame_at_timestamp(seq_out_path, args.desired_frame_time, depth_vid_file_name)
     plt.imshow(depth_frame)
     plt.show()
 
