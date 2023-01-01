@@ -17,7 +17,7 @@ def main():
 
     vid_file_name = args.seq_name + '_RGB'
     seq_out_path = os.path.join(args.dataset_path, args.seq_name)
-    rgb_frame, _ = get_frame_at_timestamp(seq_out_path, args.frame_time, vid_file_name)
+    rgb_frame, _ = get_frame_at_timestamp(seq_out_path, args.desired_frame_time, vid_file_name)
     plt.imshow(rgb_frame)
     plt.show()
 
@@ -25,6 +25,10 @@ def main():
     depth_frame, _ = get_frame_at_timestamp(seq_out_path, args.desired_frame_time, depth_vid_file_name)
     plt.imshow(depth_frame)
     plt.show()
+
+
+
+
 
 
 if __name__ == '__main__':
