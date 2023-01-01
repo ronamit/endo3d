@@ -39,7 +39,7 @@ def main():
                           [0, metadata['fy'], metadata['cy']],
                           [0, 0, 1]])
 
-    surface_cord = depth_map_to_point_cloud(depth_frame, cam_K_mat)
+    surface_cord = depth_map_to_point_cloud(depth_frame, metadata)
 
 
 if __name__ == '__main__':

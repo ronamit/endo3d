@@ -68,29 +68,31 @@ def save_metadata(seq_in_path, seq_out_path, seq_name):
     frame_rate = float(frame_rate)  # [Hz]
 
     # Manually set parameters:
-    sensor_width = 10.26  # [millimeter]  # according to https://github.com/zsustc/colon_reconstruction_dataset
-    sensor_height = 7.695  # [millimeter] # according to https://github.com/zsustc/colon_reconstruction_dataset
+    image_plane_width = 10.26  # [millimeter]  # according to https://github.com/zsustc/colon_reconstruction_dataset
+    image_plane_height = 7.695  # [millimeter] # according to https://github.com/zsustc/colon_reconstruction_dataset
     depth_vid_scale = 10.0  # [millimeter]  # the depth video values should be multiplied by depth_vid_scale to get
     # the depth in millimeter (the value was chosen to spread the depth values in the range of 0-255)
 
-    sensor_radius = 0.5 * np.sqrt(sensor_width ** 2 + sensor_height ** 2)  # [millimeter]
+    sensor_radius = 0.5 * np.sqrt(image_plane_width ** 2 + image_plane_height ** 2)  # [millimeter]
     focal_length = sensor_radius / np.tan(camFOV_rad / 2.0)  # [millimeter]
-    sx = sensor_width / frame_width  # [millimeter/pixel]
-    sy = sensor_height / frame_height  # [millimeter/pixel]
+    sx = image_plane_width / frame_width  # the with of each pixel's sensor [millimeter/pixel]
+    sy = image_plane_height / frame_height  # the height of each pixel's sensor [millimeter/pixel]
     fx = focal_length / sx  # [pixels]
     fy = focal_length / sy  # [pixels]
     cx = frame_width / 2.0  # middle of the image in x-axis [pixels]
     cy = frame_height / 2.0  # middle of the image in y-axis [pixels]
 
     metadata = {'focal_length': focal_length,
-                'sensor_width': sensor_width,
-                'sensor_height': sensor_height,
+                'image_plane_width': image_plane_width,
+                'image_plane_height': image_plane_height,
                 'frame_width': frame_width,
                 'frame_height': frame_height,
                 'fx': fx,
                 'fy': fy,
                 'cx': cx,
                 'cy': cy,
+                'sx': sx,
+                'sy': sy,
                 'frame_rate': frame_rate,
                 'depth_vid_scale': depth_vid_scale}
     metadata_path = os.path.join(seq_out_path, seq_name + '_metadata.json')
