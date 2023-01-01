@@ -4,16 +4,16 @@
 
 import argparse
 import glob
+import json
 import os
 import shutil
-import json
 
 import cv2
 import h5py
 import numpy as np
 from matplotlib import pyplot as plt
 
-from util import get_seq_id, fig2img, find_between_str
+from util import get_seq_id, find_between_str
 
 
 def main():
@@ -40,15 +40,17 @@ def main():
         metadata = save_metadata(seq_in_path, seq_out_path, seq_name)
         frame_rate = metadata['frame_rate']
 
+        save_depth_frames(seq_in_path=seq_in_path,
+                          seq_out_path=seq_out_path,
+                          vid_file_name=seq_name + '_Depth',
+                          frame_rate=frame_rate,
+                          depth_vid_scale=metadata['depth_vid_scale'])
+
         create_rgb_video(seq_in_path=seq_in_path,
                          seq_out_path=seq_out_path,
                          vid_file_name=seq_name + '_RGB',
                          frame_rate=frame_rate)
 
-        save_depth_frames(seq_in_path=seq_in_path,
-                          seq_out_path=seq_out_path,
-                          vid_file_name=seq_name + '_Depth',
-                          frame_rate=frame_rate)
 
 
 def save_metadata(seq_in_path, seq_out_path, seq_name):
@@ -65,8 +67,12 @@ def save_metadata(seq_in_path, seq_out_path, seq_name):
     frame_rate = find_between_str(sim_settings_path, r'"shotPerSec":"float\(', r'\)"')
     frame_rate = float(frame_rate)  # [Hz]
 
+    # Manually set parameters:
     sensor_width = 10.26  # [millimeter]  # according to https://github.com/zsustc/colon_reconstruction_dataset
     sensor_height = 7.695  # [millimeter] # according to https://github.com/zsustc/colon_reconstruction_dataset
+    depth_vid_scale = 10.0  # [millimeter]  # the depth video values should be multiplied by depth_vid_scale to get
+    # the depth in millimeter (the value was chosen to spread the depth values in the range of 0-255)
+
     sensor_radius = 0.5 * np.sqrt(sensor_width ** 2 + sensor_height ** 2)  # [millimeter]
     focal_length = sensor_radius / np.tan(camFOV_rad / 2.0)  # [millimeter]
     sx = sensor_width / frame_width  # [millimeter/pixel]
@@ -85,7 +91,8 @@ def save_metadata(seq_in_path, seq_out_path, seq_name):
                 'fy': fy,
                 'cx': cx,
                 'cy': cy,
-                'frame_rate': frame_rate}
+                'frame_rate': frame_rate,
+                'depth_vid_scale': depth_vid_scale}
     metadata_path = os.path.join(seq_out_path, seq_name + '_metadata.json')
     with open(metadata_path, 'w', ) as fp:
         json.dump(metadata, fp, sort_keys=True, indent=4)
@@ -105,10 +112,10 @@ def create_rgb_video(seq_in_path, seq_out_path, vid_file_name, frame_rate):
     frame_size = cv2.imread(frames_paths[0]).shape[:2]
     fourcc = cv2.VideoWriter_fourcc(*'avc1')
 
-    out_video = cv2.VideoWriter(output_path,
-                                fourcc,
-                                frame_rate,
-                                frame_size,
+    out_video = cv2.VideoWriter(filename=output_path,
+                                fourcc=fourcc,
+                                fps=frame_rate,
+                                frameSize=frame_size,
                                 isColor=True)
     for frame_path in frames_paths:
         im = cv2.imread(frame_path)
@@ -117,7 +124,8 @@ def create_rgb_video(seq_in_path, seq_out_path, vid_file_name, frame_rate):
     print(f'Video saved to: {output_path}')
 
 
-def save_depth_frames(seq_in_path, seq_out_path, vid_file_name, frame_rate, limit_frame_num=0, save_h5_file=False):
+def save_depth_frames(seq_in_path, seq_out_path, vid_file_name, frame_rate, depth_vid_scale, limit_frame_num=0,
+                      save_h5_file=False):
     """
     Load a sequence of depth images from a folder
     """
@@ -146,7 +154,11 @@ def save_depth_frames(seq_in_path, seq_out_path, vid_file_name, frame_rate, limi
         depth_img = cv2.imread(exr_path, cv2.IMREAD_ANYCOLOR | cv2.IMREAD_ANYDEPTH)[:, :, 0]
         depth_frames[i_frame] = depth_img
 
-    print(f'Min depth: {np.min(depth_frames.flatten())}, Max depth: {np.max(depth_frames.flatten())}')
+    min_depth = np.min(depth_frames.flatten())
+    max_depth = np.max(depth_frames.flatten())
+    print(f'Min-depth: {min_depth}, Max-depth: {max_depth}')
+    assert min_depth > 0, 'Min depth should be positive'
+    assert max_depth < 255 / depth_vid_scale, 'Max depth should be smaller than 255 / depth_vid_scale'
     plt.hist(depth_frames.flatten(), bins='auto')
     plt.savefig(output_path + '_histogram.png')
     plt.close()
@@ -157,43 +169,28 @@ def save_depth_frames(seq_in_path, seq_out_path, vid_file_name, frame_rate, limi
             hf.create_dataset(vid_file_name, data=depth_frames, compression='gzip')
         print(f'Depth frames saved to: {output_path}.h5')
 
-    save_depth_video(depth_frames, output_path, frame_rate, mode='gray_fixed_scale')
+    save_depth_video(depth_frames, output_path, frame_rate, depth_vid_scale)
 
 
-def save_depth_video(depth_frames, output_path, frame_rate, mode='gray_fixed_scale'):
+def save_depth_video(depth_frames, output_path, frame_rate, depth_vid_scale):
     n_frames = depth_frames.shape[0]
-    frame_size = depth_frames.shape[1:]
-    fourcc = cv2.VideoWriter_fourcc(*'avc1')
-    out_vid = cv2.VideoWriter(f'{output_path}.mp4',
-                              fourcc,
-                              fps=frame_rate,
-                              frameSize=(frame_size[1], frame_size[0]))
+    # set the last dim to zero, since the image is grayscale
+    frame_size = depth_frames.shape[1:3]
 
-    fig, ax = plt.subplots()
+    fourcc = cv2.VideoWriter_fourcc(*'avc1')
+    out_vid = cv2.VideoWriter(filename=f'{output_path}.mp4',
+                              fourcc=fourcc,
+                              fps=frame_rate,
+                              frameSize=frame_size,
+                              isColor=False)
+
     # Loop through each frame of the matrix and write it to the video
     for i in range(n_frames):
         frame = depth_frames[i]
-        dpi = 100
-        fig.set_size_inches(frame_size[0] / dpi, frame_size[1] / dpi)
-        if mode == 'gray_fixed_scale':
-            scale_factor = 10
-            ax.imshow(frame * scale_factor, cmap='gray', interpolation='nearest')
-        elif mode == 'heatmap':
-            ax.imshow(frame, cmap='hot', interpolation='nearest')
-        elif mode == 'validity':
-            ax.imshow(frame > 0, interpolation='nearest')  # a binary image
-        else:
-            raise ValueError
-        plt.axis('off')
-        plt.axis('image')
-        # remove white padding
-        plt.subplots_adjust(left=0, right=1, top=1, bottom=0)
-        im = fig2img(fig)
+        im = frame * depth_vid_scale
+        im = np.round(im).astype(np.uint8)
         out_vid.write(im)
-        plt.cla()
-    plt.close(fig)
-    # Release the VideoWriter object
-    out_vid.release()
+    out_vid.release()  # Release the video
     print(f'Depth video saved to: {output_path}')
 
 
