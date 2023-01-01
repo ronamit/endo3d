@@ -2,7 +2,7 @@ import argparse
 import os
 from matplotlib import pyplot as plt
 
-from util import get_frame_at_timestamp
+from util import get_frame_at_timestamp, depth_map_to_point_cloud, get_metadata
 
 
 def main():
@@ -26,10 +26,9 @@ def main():
     plt.imshow(depth_frame)
     plt.show()
 
-
-
-
-
+    metadata = get_metadata(args.dataset_path, args.seq_name)
+    cam_K_mat = []
+    surface_cord = depth_map_to_point_cloud(depth_frame, cam_K_mat)
 
 if __name__ == '__main__':
     main()

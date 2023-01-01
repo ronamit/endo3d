@@ -68,7 +68,7 @@ def save_metadata(seq_in_path, seq_out_path, seq_name):
     sensor_width = 10.26  # [millimeter]  # according to https://github.com/zsustc/colon_reconstruction_dataset
     sensor_height = 7.695  # [millimeter] # according to https://github.com/zsustc/colon_reconstruction_dataset
     sensor_radius = 0.5 * np.sqrt(sensor_width ** 2 + sensor_height ** 2)  # [millimeter]
-    focal_length = sensor_radius * np.tan(camFOV_rad / 2.0)  # [millimeter]
+    focal_length = sensor_radius / np.tan(camFOV_rad / 2.0)  # [millimeter]
     sx = sensor_width / frame_width  # [millimeter/pixel]
     sy = sensor_height / frame_height  # [millimeter/pixel]
     fx = focal_length / sx  # [pixels]
