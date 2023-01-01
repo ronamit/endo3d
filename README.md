@@ -6,11 +6,6 @@ The simulator has option for stereo cameras, but here we assume it was used with
 
 The optical center of the first frame camera is used as the origin point of the global space.
 
-!!!!!!!!
-Camera calibration parameters: 
-fx = 232.5044678; % unit in pixel fy = 232.5044678; cx = 240.0;
- cy = 320.0; baseline = 4.5; %unit in millimeter
-!!!!!!!!!!!
 
 
 ## Pre-requisites
