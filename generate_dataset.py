@@ -60,7 +60,7 @@ def save_metadata(seq_in_path, seq_out_path, seq_name):
     camFOV_rad = np.deg2rad(camFOV_deg)  # camera FOV [rad]
     frame_width = find_between_str(sim_settings_path, r'"shotResX":"float\(', r'\)"')
     frame_width = int(frame_width)  # [pixels]
-    frame_height = find_between_str(sim_settings_path, r'"shotResX":"float\(', r'\)"')
+    frame_height = find_between_str(sim_settings_path, r'"shotResY":"float\(', r'\)"')
     frame_height = int(frame_height)  # [pixels]
     frame_rate = find_between_str(sim_settings_path, r'"shotPerSec":"float\(', r'\)"')
     frame_rate = float(frame_rate)  # [Hz]
