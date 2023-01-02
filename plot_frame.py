@@ -40,7 +40,7 @@ def main():
                           [0, 0, 1]])
 
     surface_cord = depth_map_to_point_cloud(z_depth_frame, metadata)
-
+    pass
 
 if __name__ == '__main__':
     main()
