@@ -64,23 +64,23 @@ def plot_3d_point_cloud(surface_point, sensor_points):
 
     # color the surface point according to ray depth, and set the sensor point to black
     colors = np.concatenate((ray_depth, np.zeros(n_samples)))
-    # plot the surface points
-    fig = go.Figure(data=[go.Scatter3d(
-        x=np.concatenate((surface_point[:, 0], sensor_points[:, 0])),
-        y=np.concatenate((surface_point[:, 1], sensor_points[:, 1])),
-        z=np.concatenate((surface_point[:, 2], sensor_points[:, 2])),
-        mode='markers',
-        marker=dict(
-            size=6,
-            color=colors,  # set color to an array/list of desired values
-            colorscale='Viridis',  # choose a colorscale
-            opacity=0.8
-        )
-    )])
 
-
-
+    fig = go.Figure(
+        data=[go.Scatter3d(
+            x=np.concatenate((surface_point[:, 0], sensor_points[:, 0])),
+            y=np.concatenate((surface_point[:, 1], sensor_points[:, 1])),
+            z=np.concatenate((surface_point[:, 2], sensor_points[:, 2])),
+            mode='markers',
+            marker=dict(
+                size=5,
+                color=colors,  # set color to an array/list of desired values
+                colorscale='Viridis',  # choose a colorscale
+                opacity=0.8))])
 
     # tight layout
-    fig.update_layout(margin=dict(l=0, r=0, b=0, t=0))
+    fig.update_layout(margin=dict(l=0, r=0, b=0, t=0),
+                      scene=dict(
+                          xaxis_title='X [mm]',
+                          yaxis_title='Y [mm]',
+                          zaxis_title='Z [mm]'))
     fig.show()
