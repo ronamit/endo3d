@@ -1,9 +1,7 @@
 import glob
+import json
 import os
 import re
-import json
-
-import numpy as np
 
 os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
 import cv2

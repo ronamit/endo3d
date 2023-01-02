@@ -4,8 +4,8 @@ import os
 import numpy as np
 from matplotlib import pyplot as plt
 
-from util import get_frame_at_timestamp, get_metadata
 from geo_fun import depth_map_to_point_cloud
+from util import get_frame_at_timestamp, get_metadata
 
 
 def main():
