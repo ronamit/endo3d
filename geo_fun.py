@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def depth_map_to_point_cloud(z_depth_frame, metadata):
+def z_depth_map_to_point_cloud(z_depth_frame, metadata):
     """
     """
     height, width, channels = z_depth_frame.shape
@@ -20,18 +20,28 @@ def depth_map_to_point_cloud(z_depth_frame, metadata):
 
     # get the corresponding coordinates in the camera system fo each pixel's sensor (the z axis is the optical
     # axis) [millimeter]
-    pix_cord = np.column_stack(((u_cords - cx) * sx,
-                                (v_cords - cy) * sy,
-                                focal_length * np.ones((n_pix, 1))))
+    sensor_cord = np.column_stack(((u_cords - cx) * sx,
+                                   (v_cords - cy) * sy,
+                                   focal_length * np.ones((n_pix, 1))))
 
     # the surface point that each pixel is looking at is at a known z_depth,
     # and is on the ray connecting the focal point to the pixel's sensor.
     z_depth = z_depth_frame[:, :, 0].reshape((n_pix, 1))
-    surface_cord = pix_cord * z_depth / focal_length
+    surface_cord = sensor_cord * z_depth / focal_length
 
     # reshape to the original image shape (the last dim is the X,Y,Z  in the camera-system)
     surface_cord = surface_cord.reshape((height, width, 3))
 
     # TODO: option get the RGB color of each pixel
 
-    return surface_cord
+    return surface_cord, sensor_cord
+
+
+def z_depth_map_to_ray_depth_map(z_depth_frame, metadata):
+    height, width, channels = z_depth_frame.shape
+    n_pix = height * width
+    surface_cord, sensor_cord = z_depth_map_to_point_cloud(z_depth_frame, metadata)
+    surface_cord = surface_cord.reshape((n_pix, 3))
+    ray_depth_map = np.linalg.norm(surface_cord - sensor_cord, axis=2)
+    ray_depth_map = ray_depth_map.reshape((height, width, 1))
+    return ray_depth_map

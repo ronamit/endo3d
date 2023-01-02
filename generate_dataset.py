@@ -20,6 +20,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--sim_out_path', type=str, required=True,
                         help=' path to the Unity simulator output')
+    parser.add_argument('--save_depth_h5_file', type=bool, default=False)
+
     args = parser.parse_args()
 
     sim_out_path = os.path.abspath(args.sim_out_path)
@@ -37,16 +39,16 @@ def main():
         if not os.path.isdir(seq_out_path):
             os.makedirs(seq_out_path)
 
-        metadata = save_metadata(seq_in_path, seq_out_path, seq_name)
+        depth_value_type = np.uint8  # determines the precision of the depth values in the depth video
+        metadata = save_metadata(seq_in_path, seq_out_path, seq_name, depth_value_type)
         frame_rate = metadata['frame_rate']
-
         save_z_depth_frames(seq_in_path=seq_in_path,
                             seq_out_path=seq_out_path,
                             out_file_name=seq_name + '_Z_Depth',
                             frame_rate=frame_rate,
-                            z_depth_vid_scale=metadata['z_depth_vid_scale'])
-
-        # TODO: add save ray_depth_frames
+                            depth_vid_scale=metadata['depth_vid_scale'],
+                            depth_value_type=depth_value_type,
+                            save_depth_h5_file=args.save_depth_h5_file)
 
         create_rgb_video(seq_in_path=seq_in_path,
                          seq_out_path=seq_out_path,
@@ -54,7 +56,7 @@ def main():
                          frame_rate=frame_rate)
 
 
-def save_metadata(seq_in_path, seq_out_path, seq_name):
+def save_metadata(seq_in_path, seq_out_path, seq_name, depth_value_type):
     sim_settings_path = os.path.join(seq_in_path, 'MySettings.set')
     shutil.copy2(sim_settings_path, os.path.join(seq_out_path, 'Sim_GUI_Settings.set'))  # copy the settings file
     # Extract the settings from the settings file:
@@ -71,8 +73,11 @@ def save_metadata(seq_in_path, seq_out_path, seq_name):
     # Manually set parameters:
     image_plane_width = 10.26  # [millimeter]  # according to https://github.com/zsustc/colon_reconstruction_dataset
     image_plane_height = 7.695  # [millimeter] # according to https://github.com/zsustc/colon_reconstruction_dataset
-    z_depth_vid_scale = 10.0  # [millimeter]  # the depth video values should be multiplied by depth_vid_scale to get
-    # the depth in millimeter (the value was chosen to spread the depth values in the range of 0-255)
+
+    # [millimeter]  # the depth video values should be multiplied by depth_vid_scale to get actual depth in millimeter
+    # (the value was chosen to spread the depth values in the range of uint32)
+    max_possible_depth = 25  # [millimeter]  upper limit on the depth we can see in a video
+    depth_vid_scale = np.floor(float(np.iinfo(depth_value_type).max) / max_possible_depth)
 
     sensor_radius = 0.5 * np.sqrt(image_plane_width ** 2 + image_plane_height ** 2)  # [millimeter]
     focal_length = sensor_radius / np.tan(camFOV_rad / 2.0)  # [millimeter]
@@ -95,7 +100,7 @@ def save_metadata(seq_in_path, seq_out_path, seq_name):
                 'sx': sx,
                 'sy': sy,
                 'frame_rate': frame_rate,
-                'z_depth_vid_scale': z_depth_vid_scale}
+                'depth_vid_scale': depth_vid_scale}
     metadata_path = os.path.join(seq_out_path, seq_name + '_metadata.json')
     with open(metadata_path, 'w', ) as fp:
         json.dump(metadata, fp, sort_keys=True, indent=4)
@@ -123,8 +128,8 @@ def create_rgb_video(seq_in_path, seq_out_path, vid_file_name, frame_rate):
     print(f'Video saved to: {output_path}')
 
 
-def save_z_depth_frames(seq_in_path, seq_out_path, out_file_name, frame_rate, z_depth_vid_scale, limit_frame_num=0,
-                        save_h5_file=False):
+def save_z_depth_frames(seq_in_path, seq_out_path, out_file_name, frame_rate, depth_vid_scale, depth_value_type,
+                        limit_frame_num=0, save_depth_h5_file=False):
     """
     Load a sequence of depth images from a folder
     """
@@ -161,9 +166,9 @@ def save_z_depth_frames(seq_in_path, seq_out_path, out_file_name, frame_rate, z_
         z_depth_img = cv2.imread(exr_path, cv2.IMREAD_ANYCOLOR | cv2.IMREAD_ANYDEPTH)[:, :, 0]
         min_z_depth = min(np.min(z_depth_img.flatten()), min_z_depth)
         max_z_depth = max(np.max(z_depth_img.flatten()), max_z_depth)
-        z_depth_img_scaled = z_depth_img * z_depth_vid_scale
-        z_depth_img_scaled = np.round(z_depth_img_scaled).astype(np.uint8)
-        out_vid.write(z_depth_img_scaled)
+        z_depth_img_scaled = np.round(z_depth_img * depth_vid_scale)
+        frame = z_depth_img_scaled.astype(depth_value_type)
+        out_vid.write(frame)
 
     out_vid.release()  # Release the video
     print(f'Depth video saved to: {output_path}')
@@ -171,10 +176,11 @@ def save_z_depth_frames(seq_in_path, seq_out_path, out_file_name, frame_rate, z_
     print(f'Min-depth: {min_z_depth}, Max-depth: {max_z_depth}')
 
     assert min_z_depth > 0, 'Min depth should be positive'
-    assert max_z_depth < 255 / z_depth_vid_scale, 'Max depth should be smaller than 255 / depth_vid_scale'
+    assert max_z_depth < np.iinfo(depth_value_type).max / depth_vid_scale, 'Max depth should be smaller than 255 / ' \
+                                                                           'depth_vid_scale'
 
     # Save as matrix
-    if save_h5_file:
+    if save_depth_h5_file:
         z_depth_frames = np.zeros((n_frames, frame_size[0], frame_size[1]), dtype=np.float32)
         for i_frame, exr_path in enumerate(depth_files_paths):
             # All 3 channels are the same (depth), so we only need to read one
@@ -183,7 +189,7 @@ def save_z_depth_frames(seq_in_path, seq_out_path, out_file_name, frame_rate, z_
         with h5py.File(output_path + '.h5', 'w') as hf:
             hf.create_dataset(out_file_name, data=z_depth_frames, compression='gzip')
         print(f'Z-Depth frames saved to: {output_path}.h5')
-        plt.hist(z_depth_frames.flatten(), bins='auto', title='Z-Depth histogram')
+        plt.hist(z_depth_frames.flatten(), bins='auto')
         plt.savefig(output_path + '_histogram.png')
         plt.close()
 
