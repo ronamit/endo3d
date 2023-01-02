@@ -1,13 +1,10 @@
 import numpy as np
 
 
-def depth_map_to_point_cloud(depth_frame, metadata):
+def depth_map_to_point_cloud(z_depth_frame, metadata):
     """
-    :param depth_frame: the depth frame
-    :param depth_frame:
-     :return:
     """
-    height, width, channels = depth_frame.shape
+    height, width, channels = z_depth_frame.shape
     n_pix = height * width
 
     cx = metadata['cx']  # middle of the image in x-axis [pixels]

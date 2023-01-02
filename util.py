@@ -3,6 +3,8 @@ import os
 import re
 import json
 
+import numpy as np
+
 os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
 import cv2
 
@@ -71,4 +73,5 @@ def get_frame_at_timestamp(seq_out_path, desired_time, vid_file_name, frame_rate
     cap.release()
     frame_rgb = curr_frame[:, :, [2, 1, 0]]  # convert to RGB
     return frame_rgb, frame_exists
+
 
