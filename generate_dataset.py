@@ -14,7 +14,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 from util import get_seq_id, find_between_str
-
+from geo_fun import z_depth_map_to_ray_depth_map
 
 def main():
     parser = argparse.ArgumentParser()
@@ -42,13 +42,26 @@ def main():
         depth_value_type = np.uint8  # determines the precision of the depth values in the depth video
         metadata = save_metadata(seq_in_path, seq_out_path, seq_name, depth_value_type)
         frame_rate = metadata['frame_rate']
-        save_z_depth_frames(seq_in_path=seq_in_path,
-                            seq_out_path=seq_out_path,
-                            out_file_name=seq_name + '_Z_Depth',
-                            frame_rate=frame_rate,
-                            depth_vid_scale=metadata['depth_vid_scale'],
-                            depth_value_type=depth_value_type,
-                            save_depth_h5_file=args.save_depth_h5_file)
+
+        save_depth_frames(seq_in_path=seq_in_path,
+                          seq_out_path=seq_out_path,
+                          out_file_name=seq_name + '_z_depth',
+                          frame_rate=frame_rate,
+                          depth_vid_scale=metadata['depth_vid_scale'],
+                          depth_value_type=depth_value_type,
+                          metadata=metadata,
+                          save_depth_h5_file=args.save_depth_h5_file,
+                          depth_type='z_depth')
+
+        save_depth_frames(seq_in_path=seq_in_path,
+                          seq_out_path=seq_out_path,
+                          out_file_name=seq_name + '_ray_depth',
+                          frame_rate=frame_rate,
+                          depth_vid_scale=metadata['depth_vid_scale'],
+                          depth_value_type=depth_value_type,
+                          metadata=metadata,
+                          save_depth_h5_file=args.save_depth_h5_file,
+                          depth_type='ray_depth')
 
         create_rgb_video(seq_in_path=seq_in_path,
                          seq_out_path=seq_out_path,
@@ -76,8 +89,9 @@ def save_metadata(seq_in_path, seq_out_path, seq_name, depth_value_type):
 
     # [millimeter]  # the depth video values should be multiplied by depth_vid_scale to get actual depth in millimeter
     # (the value was chosen to spread the depth values in the range of uint32)
-    max_possible_depth = 25  # [millimeter]  upper limit on the depth we can see in a video
+    max_possible_depth = 100  # [millimeter]  upper limit on the depth we can see in a video
     depth_vid_scale = np.floor(float(np.iinfo(depth_value_type).max) / max_possible_depth)
+    print('Depth values precision: ', 1 / depth_vid_scale, ' millimeter')
 
     sensor_radius = 0.5 * np.sqrt(image_plane_width ** 2 + image_plane_height ** 2)  # [millimeter]
     focal_length = sensor_radius / np.tan(camFOV_rad / 2.0)  # [millimeter]
@@ -128,12 +142,13 @@ def create_rgb_video(seq_in_path, seq_out_path, vid_file_name, frame_rate):
     print(f'Video saved to: {output_path}')
 
 
-def save_z_depth_frames(seq_in_path, seq_out_path, out_file_name, frame_rate, depth_vid_scale, depth_value_type,
-                        limit_frame_num=0, save_depth_h5_file=False):
+def save_depth_frames(seq_in_path, seq_out_path, out_file_name, frame_rate, depth_vid_scale, depth_value_type, metadata,
+                      limit_frame_num=0, save_depth_h5_file=False, depth_type='z_depth'):
     """
     Load a sequence of depth images from a folder
     """
-
+    EXR_DEPTH_SCALE = 5.0  # the depth values in the EXR files shoud be multiplied by this value (
+    # https://github.com/zsustc/colon_reconstruction_dataset)
     seq_id = get_seq_id(seq_in_path)
     depth_files_paths = glob.glob(os.path.join(seq_in_path, f'{seq_id}_depth*.exr'))
     depth_files_paths.sort()
@@ -150,8 +165,8 @@ def save_z_depth_frames(seq_in_path, seq_out_path, out_file_name, frame_rate, de
     z_depth_img = cv2.imread(depth_files_paths[0], cv2.IMREAD_ANYCOLOR | cv2.IMREAD_ANYDEPTH)
     frame_size = z_depth_img.shape[:2]
 
-    min_z_depth = np.min(z_depth_img.flatten())
-    max_z_depth = np.max(z_depth_img.flatten())
+    min_z_depth = +np.Infinity
+    max_z_depth = -np.Infinity
 
     fourcc = cv2.VideoWriter_fourcc(*'avc1')
     out_vid = cv2.VideoWriter(filename=f'{output_path}.mp4',
@@ -163,7 +178,13 @@ def save_z_depth_frames(seq_in_path, seq_out_path, out_file_name, frame_rate, de
     # Iterate over the EXR files and add them to the video
     for i_frame, exr_path in enumerate(depth_files_paths):
         # All 3 channels are the same (depth), so we only need to read one
-        z_depth_img = cv2.imread(exr_path, cv2.IMREAD_ANYCOLOR | cv2.IMREAD_ANYDEPTH)[:, :, 0]
+        z_depth_img = EXR_DEPTH_SCALE * cv2.imread(exr_path, cv2.IMREAD_ANYCOLOR | cv2.IMREAD_ANYDEPTH)[:, :, 0]
+        if depth_type == 'z_depth':
+            pass
+        elif depth_type == 'ray_depth':
+            z_depth_img = z_depth_map_to_ray_depth_map(z_depth_img, metadata)
+        else:
+            raise ValueError(f'Unknown depth_type: {depth_type}')
         min_z_depth = min(np.min(z_depth_img.flatten()), min_z_depth)
         max_z_depth = max(np.max(z_depth_img.flatten()), max_z_depth)
         z_depth_img_scaled = np.round(z_depth_img * depth_vid_scale)

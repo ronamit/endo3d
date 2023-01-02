@@ -4,7 +4,7 @@ import numpy as np
 def z_depth_map_to_point_cloud(z_depth_frame, metadata):
     """
     """
-    height, width, channels = z_depth_frame.shape
+    height, width = z_depth_frame.shape
     n_pix = height * width
 
     cx = metadata['cx']  # middle of the image in x-axis [pixels]
@@ -26,7 +26,7 @@ def z_depth_map_to_point_cloud(z_depth_frame, metadata):
 
     # the surface point that each pixel is looking at is at a known z_depth,
     # and is on the ray connecting the focal point to the pixel's sensor.
-    z_depth = z_depth_frame[:, :, 0].reshape((n_pix, 1))
+    z_depth = z_depth_frame.reshape((n_pix, 1))
     surface_cord = sensor_cord * z_depth / focal_length
 
     # reshape to the original image shape (the last dim is the X,Y,Z  in the camera-system)
@@ -38,10 +38,10 @@ def z_depth_map_to_point_cloud(z_depth_frame, metadata):
 
 
 def z_depth_map_to_ray_depth_map(z_depth_frame, metadata):
-    height, width, channels = z_depth_frame.shape
+    height, width = z_depth_frame.shape
     n_pix = height * width
     surface_cord, sensor_cord = z_depth_map_to_point_cloud(z_depth_frame, metadata)
     surface_cord = surface_cord.reshape((n_pix, 3))
-    ray_depth_map = np.linalg.norm(surface_cord - sensor_cord, axis=2)
+    ray_depth_map = np.linalg.norm(surface_cord - sensor_cord, axis=-1)
     ray_depth_map = ray_depth_map.reshape((height, width, 1))
     return ray_depth_map

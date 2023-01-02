@@ -24,13 +24,13 @@ def main():
     vid_file_name = args.seq_name + '_RGB'
     seq_out_path = os.path.join(args.dataset_path, args.seq_name)
     rgb_frame, _ = get_frame_at_timestamp(seq_out_path, args.desired_frame_time, vid_file_name, frame_rate,
-                                          is_grayscale=True)
+                                          is_grayscale=False)
     plt.imshow(rgb_frame)
     plt.show()
 
     z_depth_vid_file_name = args.seq_name + '_Z_Depth'
     z_depth_frame, _ = get_frame_at_timestamp(seq_out_path, args.desired_frame_time, z_depth_vid_file_name, frame_rate,
-                                              is_grayscale=False)
+                                              is_grayscale=True)
     plt.imshow(z_depth_frame, label='Z-Depth')
     plt.show()
 

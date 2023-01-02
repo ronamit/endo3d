@@ -69,7 +69,10 @@ def get_frame_at_timestamp(seq_out_path, desired_time, vid_file_name, frame_rate
             break
         frame_no += 1
     cap.release()
-    frame_rgb = curr_frame[:, :, [2, 1, 0]]  # convert to RGB
-    return frame_rgb, frame_exists
+    if is_grayscale:
+        frame_out = curr_frame[:, :, 0]  # convert to RGB
+    else:
+        frame_out = curr_frame[:, :, [2, 1, 0]]  # convert to RGB
+    return frame_out, frame_exists
 
 
