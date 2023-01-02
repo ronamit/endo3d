@@ -1,5 +1,5 @@
 import numpy as np
-from matplotlib import pyplot as plt
+import plotly.graph_objects as go
 
 
 def z_depth_map_to_point_cloud(z_depth_frame, metadata):
@@ -28,11 +28,11 @@ def z_depth_map_to_point_cloud(z_depth_frame, metadata):
     # the surface point that each pixel is looking at is at a known z_depth,
     # and is on the ray connecting the focal point to the pixel's sensor.
     z_depth = z_depth_frame.reshape((n_pix, 1))
-    point_cloud = sensor_cord * z_depth / focal_length  # the X,Y,Z  in the camera-system
+    surface_cord = sensor_cord * z_depth / focal_length  # the X,Y,Z  in the camera-system
 
     # TODO: option get the RGB color of each pixel
 
-    return point_cloud, sensor_cord
+    return surface_cord, sensor_cord
 
 
 def z_depth_map_to_ray_depth_map(z_depth_frame, metadata):
@@ -45,14 +45,42 @@ def z_depth_map_to_ray_depth_map(z_depth_frame, metadata):
     return ray_depth_map
 
 
-def plot_3d_point_cloud(point_cloud, title=''):
-    """
-    """
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    ax.scatter(point_cloud[:, 0], point_cloud[:, 1], point_cloud[:, 2])
-    ax.set_xlabel('X Label')
-    ax.set_ylabel('Y Label')
-    ax.set_zlabel('Z Label')
-    ax.set_title(title)
-    plt.show()
+# def plot_3d_point_cloud(point_cloud, title=''):
+#     """
+#     """
+#     fig = plt.figure()
+#     ax = fig.add_subplot(111, projection='3d')
+#     ax.scatter(point_cloud[:, 0], point_cloud[:, 1], point_cloud[:, 2])
+#     ax.set_xlabel('X Label')
+#     ax.set_ylabel('Y Label')
+#     ax.set_zlabel('Z Label')
+#     ax.set_title(title)
+#     plt.show()
+#
+
+def plot_3d_point_cloud(surface_point, sensor_points):
+    n_samples = surface_point.shape[0]
+    ray_depth = np.linalg.norm(surface_point - sensor_points, axis=-1)
+
+    # color the surface point according to ray depth, and set the sensor point to black
+    colors = np.concatenate((ray_depth, np.zeros(n_samples)))
+    # plot the surface points
+    fig = go.Figure(data=[go.Scatter3d(
+        x=np.concatenate((surface_point[:, 0], sensor_points[:, 0])),
+        y=np.concatenate((surface_point[:, 1], sensor_points[:, 1])),
+        z=np.concatenate((surface_point[:, 2], sensor_points[:, 2])),
+        mode='markers',
+        marker=dict(
+            size=6,
+            color=colors,  # set color to an array/list of desired values
+            colorscale='Viridis',  # choose a colorscale
+            opacity=0.8
+        )
+    )])
+
+
+
+
+    # tight layout
+    fig.update_layout(margin=dict(l=0, r=0, b=0, t=0))
+    fig.show()
