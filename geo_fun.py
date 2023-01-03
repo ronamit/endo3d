@@ -58,12 +58,20 @@ def z_depth_map_to_ray_depth_map(z_depth_frame, metadata):
 #     plt.show()
 #
 
-def plot_3d_point_cloud(surface_point, sensor_points):
+def plot_3d_point_cloud(surface_point, sensor_points, rgb_frame, color_by='Ray_Depth'):
     n_samples = surface_point.shape[0]
     ray_depth = np.linalg.norm(surface_point - sensor_points, axis=-1)
 
-    # color the surface point according to ray depth, and set the sensor point to black
-    colors = np.concatenate((ray_depth, np.zeros(n_samples)))
+    if color_by == 'Ray_Depth':
+        # color the surface point according to ray depth, and set the sensor point to black
+        colors = np.concatenate((ray_depth, np.zeros(n_samples)))
+    else:
+        raise ValueError('Unknown color_by option')
+    # elif color_by == 'RGB':
+    #     # color the surface point according to RGB, and set the sensor point to black
+    #     colors = [rgb_frame[:, i_chan].tolist() + [0 for _ in range(n_samples)]
+    #               for i_chan in range(3)]
+
 
     fig = go.Figure(
         data=[go.Scatter3d(
