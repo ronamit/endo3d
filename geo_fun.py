@@ -72,7 +72,6 @@ def plot_3d_point_cloud(surface_point, sensor_points, rgb_frame, color_by='Ray_D
     #     colors = [rgb_frame[:, i_chan].tolist() + [0 for _ in range(n_samples)]
     #               for i_chan in range(3)]
 
-
     fig = go.Figure(
         data=[go.Scatter3d(
             x=np.concatenate((surface_point[:, 0], sensor_points[:, 0])),
