@@ -8,7 +8,6 @@ future==0.18.2
 h5py==3.7.0
 idna==3.4
 imageio==2.23.0
-imath==0.0.2
 kiwisolver==1.4.4
 matplotlib==3.6.2
 networkx==2.8.8
@@ -16,7 +15,6 @@ numpy==1.24.0
 opencv-python==4.7.0.68
 packaging==22.0
 Pillow==9.3.0
-protobuf==3.20.1
 pyparsing==3.0.9
 python-dateutil==2.8.2
 PyWavelets==1.4.1

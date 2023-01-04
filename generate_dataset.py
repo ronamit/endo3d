@@ -21,6 +21,9 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--sim_out_path', type=str, required=True,
                         help=' path to the Unity simulator output')
+    parser.add_argument('--frame_rate', type=float, required=False, default=0,
+                        help='frame retain Hz of the output videos, if 0 the frame rate will be extracted from the '
+                             'settings file')
     parser.add_argument('--save_depth_h5_file', type=bool, default=False)
     args = parser.parse_args()
 
@@ -40,7 +43,7 @@ def main():
             os.makedirs(seq_out_path)
 
         depth_value_type = np.uint8  # determines the precision of the depth values in the depth video
-        metadata = save_metadata(seq_in_path, seq_out_path, seq_name, depth_value_type)
+        metadata = create_metadata(seq_in_path, seq_out_path, seq_name, depth_value_type, args)
         frame_rate = metadata['frame_rate']
 
         save_depth_frames(seq_in_path=seq_in_path,
@@ -69,7 +72,7 @@ def main():
                          frame_rate=frame_rate)
 
 
-def save_metadata(seq_in_path, seq_out_path, seq_name, depth_value_type):
+def create_metadata(seq_in_path, seq_out_path, seq_name, depth_value_type, args):
     sim_settings_path = os.path.join(seq_in_path, 'MySettings.set')
     shutil.copy2(sim_settings_path, os.path.join(seq_out_path, 'Sim_GUI_Settings.set'))  # copy the settings file
     # Extract the settings from the settings file:
@@ -80,8 +83,11 @@ def save_metadata(seq_in_path, seq_out_path, seq_name, depth_value_type):
     frame_width = int(frame_width)  # [pixels]
     frame_height = find_between_str(sim_settings_path, r'"shotResY":"float\(', r'\)"')
     frame_height = int(frame_height)  # [pixels]
-    frame_rate = find_between_str(sim_settings_path, r'"shotPerSec":"float\(', r'\)"')
-    frame_rate = float(frame_rate)  # [Hz]
+
+    if args.frame_rate == 0:
+        frame_rate = float(find_between_str(sim_settings_path, r'"shotPerSec":"float\(', r'\)"'))  # [Hz]_rate_sim)
+    else:
+        frame_rate = args.frame_rate  # [Hz]
 
     # Manually set parameters:
     image_plane_width = 10.26  # [millimeter]  # according to https://github.com/zsustc/colon_reconstruction_dataset
@@ -205,7 +211,7 @@ def save_depth_frames(seq_in_path, seq_out_path, out_file_name, frame_rate, dept
     print(f'Min-depth: {min_z_depth}, Max-depth: {max_z_depth}')
 
     assert min_z_depth > 0, 'Min depth should be positive'
-    assert max_z_depth < np.iinfo(depth_value_type).max / depth_vid_scale,\
+    assert max_z_depth < np.iinfo(depth_value_type).max / depth_vid_scale, \
         f'Max_depth should fit in the range of {depth_value_type} '
 
     # Save as matrix
