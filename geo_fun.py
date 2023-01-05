@@ -58,7 +58,7 @@ def z_depth_map_to_ray_depth_map(z_depth_frame, metadata):
 #     plt.show()
 #
 
-def plot_3d_point_cloud(surface_point, sensor_points, rgb_frame, color_by='Ray_Depth'):
+def plot_3d_point_cloud(surface_point, sensor_points, color_by='Ray_Depth'):
     n_samples = surface_point.shape[0]
     ray_depth = np.linalg.norm(surface_point - sensor_points, axis=-1)
 
@@ -74,9 +74,9 @@ def plot_3d_point_cloud(surface_point, sensor_points, rgb_frame, color_by='Ray_D
 
     fig = go.Figure(
         data=[go.Scatter3d(
-            x=np.concatenate((surface_point[:, 0], sensor_points[:, 0])),
-            y=np.concatenate((surface_point[:, 1], sensor_points[:, 1])),
-            z=np.concatenate((surface_point[:, 2], sensor_points[:, 2])),
+            x=surface_point[:, 0],
+            y=surface_point[:, 1],
+            z=surface_point[:, 2],
             mode='markers',
             marker=dict(
                 size=5,
@@ -90,4 +90,13 @@ def plot_3d_point_cloud(surface_point, sensor_points, rgb_frame, color_by='Ray_D
                           xaxis_title='X [mm]',
                           yaxis_title='Y [mm]',
                           zaxis_title='Z [mm]'))
+
+    # add the image plane
+    fig.add_trace(
+            go.Mesh3d(
+                x=[sensor_points[:, 0].min(), sensor_points[:, 0].max(), sensor_points[:, 0].max(), sensor_points[:, 0].min()],
+                y=[sensor_points[:, 1].min(), sensor_points[:, 1].min(), sensor_points[:, 1].max(), sensor_points[:, 1].max()],
+                z=[sensor_points[:, 2].min(), sensor_points[:, 2].min(), sensor_points[:, 2].min(), sensor_points[:, 2].min()],
+                opacity=0.6)
+    )
     fig.show()

@@ -41,7 +41,7 @@ def main():
 
     surface_cord, sensor_cord = z_depth_map_to_point_cloud(z_depth_frame, metadata)
 
-    plot_3d_point_cloud(surface_cord, sensor_cord, rgb_frame)
+    plot_3d_point_cloud(surface_cord, sensor_cord)
     pass
 
 
