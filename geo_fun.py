@@ -94,9 +94,12 @@ def plot_3d_point_cloud(surface_point, sensor_points, color_by='Ray_Depth'):
     # add the image plane
     fig.add_trace(
             go.Mesh3d(
-                x=[sensor_points[:, 0].min(), sensor_points[:, 0].max(), sensor_points[:, 0].max(), sensor_points[:, 0].min()],
-                y=[sensor_points[:, 1].min(), sensor_points[:, 1].min(), sensor_points[:, 1].max(), sensor_points[:, 1].max()],
-                z=[sensor_points[:, 2].min(), sensor_points[:, 2].min(), sensor_points[:, 2].min(), sensor_points[:, 2].min()],
+                x=[sensor_points[:, 0].min(), sensor_points[:, 0].max(),
+                   sensor_points[:, 0].max(), sensor_points[:, 0].min()],
+                y=[sensor_points[:, 1].min(), sensor_points[:, 1].min(),
+                   sensor_points[:, 1].max(), sensor_points[:, 1].max()],
+                z=[sensor_points[:, 2].min(), sensor_points[:, 2].min(),
+                   sensor_points[:, 2].min(), sensor_points[:, 2].min()],
                 opacity=0.6)
     )
     fig.show()
