@@ -18,6 +18,7 @@ The simulator has option for stereo cameras, but here we assume it was used with
 ## How to run dataset generation
 Run `generate_dataset.py` with the following required arguments:
 * --sim_out_path: path to the simulator output (the folder containing the `Sequence_XXX` folders)
+* --frame_rate: frame retain Hz of the output videos, if 0 the frame rate will be extracted from the settings file
 
 ## Output description
 * The camera_motion.csv file contains: pos_x, pos_y and pos_z coordinates of the camera center in the world space in millimeters,
