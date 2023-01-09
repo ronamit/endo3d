@@ -7,6 +7,7 @@ import glob
 import json
 import os
 import shutil
+import pandas as pd
 
 import cv2
 import h5py
@@ -14,7 +15,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 from geo_fun import z_depth_map_to_ray_depth_map
-from util import get_seq_id, find_between_str
+from util import get_seq_id, find_in_file_between_str, find__between_str
 
 
 def main():
@@ -46,6 +47,11 @@ def main():
         metadata = create_metadata(seq_in_path, seq_out_path, seq_name, depth_value_type, args)
         frame_rate = metadata['frame_rate']
 
+        load_camera_motion(seq_in_path=seq_in_path,
+                           seq_out_path=seq_out_path,
+                           out_file_name=seq_name + '_camera_motion.csv',
+                           frame_rate=frame_rate)
+
         save_depth_frames(seq_in_path=seq_in_path,
                           seq_out_path=seq_out_path,
                           out_file_name=seq_name + '_z_depth',
@@ -74,18 +80,20 @@ def main():
 
 def create_metadata(seq_in_path, seq_out_path, seq_name, depth_value_type, args):
     sim_settings_path = os.path.join(seq_in_path, 'MySettings.set')
-    shutil.copy2(sim_settings_path, os.path.join(seq_out_path, 'Sim_GUI_Settings.set'))  # copy the settings file
+    # copy the settings file to the dataset folder
+    shutil.copy2(sim_settings_path, os.path.join(seq_out_path, seq_name + '_Sim_GUI_Settings.set'))
     # Extract the settings from the settings file:
-    camFOV_deg = find_between_str(sim_settings_path, r'"camFOV":"float\(', r'\)"')
+    camFOV_deg = find_in_file_between_str(sim_settings_path, r'"camFOV":"float\(', r'\)"')
     camFOV_deg = float(camFOV_deg)  # camera FOV [deg]
     camFOV_rad = np.deg2rad(camFOV_deg)  # camera FOV [rad]
-    frame_width = find_between_str(sim_settings_path, r'"shotResX":"float\(', r'\)"')
+    frame_width = find_in_file_between_str(sim_settings_path, r'"shotResX":"float\(', r'\)"')
     frame_width = int(frame_width)  # [pixels]
-    frame_height = find_between_str(sim_settings_path, r'"shotResY":"float\(', r'\)"')
+    frame_height = find_in_file_between_str(sim_settings_path, r'"shotResY":"float\(', r'\)"')
     frame_height = int(frame_height)  # [pixels]
 
     if args.frame_rate == 0:
-        frame_rate = float(find_between_str(sim_settings_path, r'"shotPerSec":"float\(', r'\)"'))  # [Hz]_rate_sim)
+        frame_rate = float(
+            find_in_file_between_str(sim_settings_path, r'"shotPerSec":"float\(', r'\)"'))  # [Hz]_rate_sim)
     else:
         frame_rate = args.frame_rate  # [Hz]
 
@@ -227,6 +235,46 @@ def save_depth_frames(seq_in_path, seq_out_path, out_file_name, frame_rate, dept
         plt.hist(z_depth_frames.flatten(), bins='auto')
         plt.savefig(output_path + '_histogram.png')
         plt.close()
+
+
+def load_camera_motion(seq_in_path, seq_out_path, out_file_name, frame_rate):
+    seq_id = get_seq_id(seq_in_path)
+    pos_file_path = os.path.join(seq_in_path, seq_id + '_Camera Position Data.txt')
+    i = 0
+    pos_x = []
+    pos_y = []
+    pos_z = []
+    cm_to_mm = 10
+    with open(pos_file_path, 'r') as f:
+        lines = f.readlines()
+        for line in lines:
+            frame_ind = int(find__between_str(line, 'Frame ', ' '))
+            assert i == frame_ind
+            pos_x.append(cm_to_mm * float(find__between_str(line, 'X=', ',')))
+            pos_y.append(cm_to_mm * float(find__between_str(line, 'Y=', ',')))
+            pos_z.append(cm_to_mm * float(find__between_str(line, 'Z=', ' ')))
+            i += 1
+
+    rot_file_path = os.path.join(seq_in_path, seq_id + '_Camera Quaternion Rotation Data.txt')
+    i = 0
+    quat_x = []
+    quat_y = []
+    quat_z = []
+    quat_w = []
+    with open(rot_file_path, 'r') as f:
+        lines = f.readlines()
+        for line in lines:
+            frame_ind = int(find__between_str(line, 'Frame ', ' '))
+            assert i == frame_ind
+            quat_x.append(float(find__between_str(line, 'X=', ',')))
+            quat_y.append(float(find__between_str(line, 'Y=', ',')))
+            quat_z.append(float(find__between_str(line, 'Z=', ',')))
+            quat_w.append(float(find__between_str(line, 'W=', ' ')))
+            i += 1
+    df = pd.DataFrame({'pos_x': pos_x, 'pos_y': pos_y, 'pos_z': pos_z, 'quat_x': quat_x, 'quat_y': quat_y,
+                       'quat_z': quat_z, 'quat_w': quat_w})
+    output_path = os.path.join(seq_out_path, out_file_name)
+    df.to_csv(output_path)
 
 
 if __name__ == '__main__':
