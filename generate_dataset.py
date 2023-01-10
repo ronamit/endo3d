@@ -15,7 +15,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 from geo_fun import z_depth_map_to_ray_depth_map
-from util import get_seq_id, find_in_file_between_str, find__between_str
+from util import get_seq_id, find_in_file_between_str, find_between_str
 
 
 def main():
@@ -248,11 +248,11 @@ def load_camera_motion(seq_in_path, seq_out_path, out_file_name, frame_rate):
     with open(pos_file_path, 'r') as f:
         lines = f.readlines()
         for line in lines:
-            frame_ind = int(find__between_str(line, 'Frame ', ' '))
+            frame_ind = int(find_between_str(line, 'Frame ', ' '))
             assert i == frame_ind
-            pos_x.append(cm_to_mm * float(find__between_str(line, 'X=', ',')))
-            pos_y.append(cm_to_mm * float(find__between_str(line, 'Y=', ',')))
-            pos_z.append(cm_to_mm * float(find__between_str(line, 'Z=', ' ')))
+            pos_x.append(cm_to_mm * float(find_between_str(line, 'X=', ',')))
+            pos_y.append(cm_to_mm * float(find_between_str(line, 'Y=', ',')))
+            pos_z.append(cm_to_mm * float(find_between_str(line, 'Z=', ' ')))
             i += 1
 
     rot_file_path = os.path.join(seq_in_path, seq_id + '_Camera Quaternion Rotation Data.txt')
@@ -264,12 +264,12 @@ def load_camera_motion(seq_in_path, seq_out_path, out_file_name, frame_rate):
     with open(rot_file_path, 'r') as f:
         lines = f.readlines()
         for line in lines:
-            frame_ind = int(find__between_str(line, 'Frame ', ' '))
+            frame_ind = int(find_between_str(line, 'Frame ', ' '))
             assert i == frame_ind
-            quat_x.append(float(find__between_str(line, 'X=', ',')))
-            quat_y.append(float(find__between_str(line, 'Y=', ',')))
-            quat_z.append(float(find__between_str(line, 'Z=', ',')))
-            quat_w.append(float(find__between_str(line, 'W=', ' ')))
+            quat_x.append(float(find_between_str(line, 'X=', ',')))
+            quat_y.append(float(find_between_str(line, 'Y=', ',')))
+            quat_z.append(float(find_between_str(line, 'Z=', ',')))
+            quat_w.append(float(find_between_str(line, 'W=', ' ')))
             i += 1
     df = pd.DataFrame({'pos_x': pos_x, 'pos_y': pos_y, 'pos_z': pos_z, 'quat_x': quat_x, 'quat_y': quat_y,
                        'quat_z': quat_z, 'quat_w': quat_w})

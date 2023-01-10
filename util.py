@@ -15,7 +15,7 @@ def get_seq_id(seq_in_path):
     return seq_id
 
 
-def find__between_str(s, before_str, after_str):
+def find_between_str(s, before_str, after_str):
     """
     find the string between two strings in a file
     :param s: the string to search in
@@ -42,7 +42,7 @@ def find_in_file_between_str(file_path, before_str, after_str):
     with open(file_path, 'r') as f:
         lines = f.readlines()
         for line in lines:
-            match = find__between_str(line, before_str, after_str)
+            match = find_between_str(line, before_str, after_str)
             if match is not None:
                 matches.append(match)
     assert len(matches) == 1, f'Found {len(matches)} matches for {before_str} and {after_str} in {file_path}'
