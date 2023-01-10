@@ -25,3 +25,4 @@ Run `generate_dataset.py` with the following required arguments:
 and the [quaternion representations](https://en.wikipedia.org/wiki/Quaternions_and_spatial_rotation) of rotation from world space to the camera  space (quat_x, quat_y, quat_z, quat_w).
 * the optical center of the first frame camera is used as the origin point of the world space.
 * Note that Unity uses a left-handed coordinate system (see https://github.com/zsustc/colon_reconstruction_dataset)
+* The grayscale values of the depth video should be mu;tipleid by "depth_vid_scale" (from the metadata json file) to get millimeter units.
